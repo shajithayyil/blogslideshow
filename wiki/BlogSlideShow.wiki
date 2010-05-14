@@ -17,6 +17,9 @@ rel attribute containing Url of image file. When you click on such a link, youâ€
 get the image view on the overlay. When hovering the overlay you get toolbar appeared
 by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
 
+= Demo =
+  * [http://demo.dsheiko.com/blogslideshow/]
+
 = Ports =
   * [http://dsheiko.com/download/opensource/yui3.blogslideshow.zip YUI3 port]
   * [http://dsheiko.com/download/opensource/jquery.blogslideshow.zip jQuery Plugin]
