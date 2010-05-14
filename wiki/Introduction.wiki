@@ -3,11 +3,11 @@
 = Requirements =
 
 Tested under following browsers:
-* Google Chrome 4.1
-* Firefox 3.6.3
-* Opera 10.10
-* Apple Safari 4.0.5
-* IE 8
+  *  Google Chrome 4.1
+  *  Firefox 3.6.3
+  *  Opera 10.10
+  *  Apple Safari 4.0.5
+  *  IE 8
 
 = Description =
 BlogSlideShow is a tiny JS component, which implements a fancy image viewer, that
@@ -18,17 +18,16 @@ get the image view on the overlay. When hovering the overlay you get toolbar app
 by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
 
 = Ports =
-[http://dsheiko.com/download/opensource/yui3.blogslideshow.zip YUI3 port]
-
-[http://dsheiko.com/download/opensource/jquery.blogslideshow.zip jQuery Plugin]
+  * [http://dsheiko.com/download/opensource/yui3.blogslideshow.zip YUI3 port]
+  * [http://dsheiko.com/download/opensource/jquery.blogslideshow.zip jQuery Plugin]
 
 = Files =
 
-* index.html - sample HTML page
-* .jpg - sample images
-* ss_toolbar.png - toolbar
-* blogslideshow.js - JS library
-* blogslideshow.css - stylesheet
+  * index.html - sample HTML page
+  * `*`.jpg - sample images
+  * ss_toolbar.png - toolbar
+  * blogslideshow.js - JS library
+  * blogslideshow.css - stylesheet
 
 = How To Install =
 
