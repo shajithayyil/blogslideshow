@@ -31,6 +31,7 @@ by which you can navigate images. Besides, you can use keyboard arrows <-, -> as
 
 = How To Install =
 
+== JS ==
 Just add the HTML page or yours following code:
 {{{
 <script src="blogslideshow.js" ></script>
@@ -44,10 +45,24 @@ window.onload = function(){
 </script>
 }}}
 
-At the moment two options are available:
-    effect: available options - fade, scroll, rotate, curtanX, zoom, or null
-and
-    css : 'path to the stylesheet'
+
+===Arguments===
+  # options - (object) The options below. 
+
+===Options===
+
+  * effect - (string) which transition effect to apply. 
+  * css - (string) path to the stylesheet
+
+===Effects===
+  * fade 
+  * scroll 
+  * rotate 
+  * curtanX 
+  * zoom 
+  * null
+
+==HTML==
 
 And supply with rel="blogslideshow" all the links to images you want to show through
 Blog Slide Show like that:
