@@ -1,0 +1,38 @@
+    .hidden { display: none }
+    #ss-sprite { z-index: auto; position: absolute; }
+    #ss-mask { z-index: auto; position:fixed; top:0; left:0; bottom:0; right:0; opacity:0.35; filter:alpha(opacity:35); background:#000;}
+    
+    #ss-window { z-index: auto; 
+                 min-width: 300px;
+                 min-height: 300px;
+                 padding: 0;
+                 position: absolute;
+                 background-repeat: no-repeat;
+    }
+    #ss-window > img {
+        -moz-box-shadow: 5px 5px 5px #444;
+        -webkit-box-shadow: 5px 5px 5px #444;
+    }
+    #ss-window > #ss-toolbar {
+        z-index: auto;
+        position: absolute;
+        width: 180px;
+        height: 40px;
+        background: #969696 url(ss_toolbar.png) no-repeat;
+        left: 50%;
+        margin-left: -90px;
+        bottom: 15px;
+        opacity:0.75;
+        filter:alpha(opacity:75);
+        padding: 0;
+        border: 2px solid white;
+        -moz-border-radius: 5px 5px;
+        -webkit-border-radius: 5px 5px;
+    }
+    #ss-window > #ss-toolbar > .ss-btn {
+        margin: 0;
+        width: 58px;
+        height: 40px;
+        float: left;
+        cursor: pointer;
+    }
