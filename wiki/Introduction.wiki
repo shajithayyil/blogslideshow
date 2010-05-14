@@ -18,8 +18,9 @@ get the image view on the overlay. When hovering the overlay you get toolbar app
 by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
 
 = Ports =
-* [http://dsheiko.com/download/opensource/yui3.blogslideshow.zip|YUI3 port]
-* [http://dsheiko.com/download/opensource/jquery.blogslideshow.zip|jQuery Plugin]
+[http://dsheiko.com/download/opensource/yui3.blogslideshow.zip YUI3 port]
+
+[http://dsheiko.com/download/opensource/jquery.blogslideshow.zip jQuery Plugin]
 
 = Files =
 
