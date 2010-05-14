@@ -72,3 +72,55 @@ Blog Slide Show like that:
 {{{
 <a href="sample_wiesbaden.jpg" rel="blogslideshow">link</a>
 }}}
+
+=How to make my own effect?=
+
+The queue has following public methods:
+  * add(options) - adds an asynchronous iterator into the queue, which will call 'iteratedCallback' of 'iterations' times and then invoke  'completedCallback'
+  * run – starts processing of the queue
+  * stop  - use it, when you need to cancel the queue immediately
+
+Options:
+{{{
+object options {
+     startedCallback : function,  // OPTIONAL. Invoked before iterations started
+     iteratedCallback : function, // invoked when every iteration
+     completedCallback: function, // invoked when the bunch of iterations completed
+     iterations : int, // number of expected iterations 
+     delay: int  // delay in msec
+     reverse: boolean //- OPTIONAL. When reverse is true, decrementing, otherwise incrementing
+     scope: object // context of use
+}
+}}}
+
+So, having this tool we can declare effect implementation in the following fashion:
+{{{
+aQueue.add({
+      startedCallback: effect._fadeStarted,
+      iteratedCallback: effect._fadeIterated,
+      completedCallback: effect._fadeCompleted,
+      iterations: 3,
+      delay: 100,
+      scope: this}).run();
+}}}
+Here in effect._fadeStarted handler we can overlay the current image with next one, which opacity style is about zero (it’s totally transparent).  effect._fadeIterated receives as parameters counter and number (iterations number). So we can use them to change opacity of the appearing image till it becomes pretty solid.  effect._fadeCompleted can be used to clean background picture (we don’t need it anymore) and align image overlay to the viewport center according to the new image size.
+
+Another case, when you want during the effect a sequence of transitions. E.g. the old image is disappearing  ad then the new one starts showing up. So here are two of iterators :
+
+{{{
+aQueue.add({
+         startedCallback: effect._fadeStarted,
+         iteratedCallback: effect._ fadeIterated,
+         completedCallback: effect._ fadeHalfCompleted,
+         iterations: 5,
+         delay: 150,
+         scope: this,
+         reverse : true}).add({
+         iteratedCallback: effect._ fade Iterated,
+         completedCallback: effect._ fadeCompleted,
+         iterations: 5,
+         delay: 150,
+         scope: this}).run();
+}}}
+
+Well, I hope I’ll find it pretty easy to apply a new effects on the slider and looking forward see them. Now when CSS3 provides us with new amazing features, that seems the only limitations we still have is in our imagination. Enjoy! 
