@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Blog Slide Show Sample</title>
+    <style>
+        body { background-color: #D8DCE0; font-family: Tahoma; font-size: 14px; }
+        h1 { font-family: Tahoma; color: #fff; font-size: 18px; }
+        div.message-box {
+            padding: 0;
+            margin: 40px;
+            width: 70%;
+        }
+        div.message-box > div.header {
+            background-color: #3C5F87;
+            -moz-border-radius: 5px 5px 0 0;
+            -webkit-border-radius: 5px 5px 0 0;
+            padding: 10px 20px;
+        }
+        div.message-box > div.body {
+            padding: 10px 20px;
+            background-color: #fff;
+            -moz-border-radius: 0 0 5px 5px;
+            -webkit-border-radius: 0 0 5px 5px;
+        }
+        textarea { 
+           width: 100%;
+           height: 170px;
+        }
+    </style>
+    <script src="blogslideshow.js" ></script>
+    <script type="text/javascript">
+    <!--
+    window.onload = function(){
+        new bsShow({
+            effect: 'fade'
+        });
+        document.getElementById('selector').onchange = function() {
+            bsShow({
+                effect: this.options[this.selectedIndex].value
+            });
+        };
+    } // -->
+    </script>
+</head>    
+<body>
+    <div class="message-box">
+        <div class="header">
+            <h1>Blog Slide Show Sample Page</h1>
+        </div>
+        <div class="body">
+        <p>
+            Here is an example of <a href="http://demo.dsheiko.com/blogslideshow">BlogSlideShow</a>
+            usage. The tool produced by <a href="http://dsheiko.com/aboutme/">me</a> initialy in
+            2008 and updated in 2010
+        </p>
+        <p>
+            BlogSlideShow is a tiny JS component, which implements a fancy image viewer, that
+            supports many different types of transition effects including CSS3/HTML5-related.
+            All what you need is to provide links on your images, you want to show, with
+            rel attribute containing Url of image file. When you click on such a link, you’ll
+            get the image view on the overlay. When hovering the overlay you get toolbar appeared
+            by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
+        </p>
+        <p>
+            To make the image viewer available on your page you just need this package files and
+            those lines in your HTML:
+        </p>
+        <p>
+            <textarea>
+<script src="blogslideshow.js" ></script>
+<script type="text/javascript">
+<!--
+window.onload = function(){
+    new bsShow({
+        effect: 'fade'
+    });   
+} // -->
+</script>
+            </textarea>
+        </p>
+        <p>
+            The version 2.0 works properly on Firefox, Google Chrome, Opera, Apple Safari, IE8.
+        </p>
+        <p>
+            Source code of BlogSlideShow is available to download at
+            <a href="http://dsheiko.com/download/opensource/blogslideshow.zip">dsheiko.com</a>.
+            Please, find the documentation there as well
+        </p>
+        <p>
+            Select the visual effect you want to apply:
+            <select id="selector">
+                <option>fade</option>
+                <option>scroll</option>
+                <option value="rotate">rotate (CSS3)</option>
+                <option>curtanX</option>
+                <option value="zoom">zoom (CSS3)</option>
+                <option value="">[without any effect]</option>
+            </select>
+        </p>
+        <p>
+            Now click on one of the following links and enjoy the image viwer.
+        </p>
+        <ul>
+            <li><a href="sample_frankfurt.jpg" rel="blogslideshow">Frankfurt am Main</a></li>
+            <li><a href="sample_fussen.jpg" rel="blogslideshow">Füssen</a></li>
+            <li><a href="sample_wiesbaden.jpg" rel="blogslideshow">Wiesbaden</a></li>
+        </ul>
+        <p>
+            The photos are taken from my <a href="http://picasaweb.google.com/web.sbelarus/">personal alboum</a>
+        </p>
+        <p>
+            My other open source works can be found <a href="http://dsheiko.com/freeware/">here</a>
+        </p>
+        </div>
+    </div>
+</body>
+</html>
