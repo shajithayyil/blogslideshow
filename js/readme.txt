@@ -35,12 +35,6 @@ ss_toolbar.png - toolbar
 blogslideshow.js - JS library
 blogslideshow.css - stylesheet
 
-BENEFITS
-
-This is a really small solution, which is definitely easy to develop and customize.
-
-Your site visitors are not obliged anymore to open images in new browser window (that takes pretty long time and noticeable piece of RAM). They just get requested images in the current window.
-
 
 HOW TO INSTALL
 
@@ -56,10 +50,27 @@ window.onload = function(){
 } // -->
 </script>
 
-At the moment two options are available:
-    effect: available options - fade, scroll, rotate, curtanX, zoom, or null
-and
-    css : 'path to the stylesheet'
+
+JS 
+
+Arguments
+
+   1. options - (object) The options below. 
+
+Options
+
+    * effect - (string) which transition effect to apply.
+
+Effects
+
+    * fade
+    * scroll
+    * rotate
+    * curtanX
+    * zoom
+    * null 
+
+HTML
 
 And supply with rel="blogslideshow" all the links to images you want to show through
 Blog Slide Show like that:
