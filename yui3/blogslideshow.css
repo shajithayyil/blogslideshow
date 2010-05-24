@@ -1,13 +1,37 @@
-    .hidden { display: none }
-    #ss-sprite { z-index: auto; position: absolute; }
-    #ss-mask { z-index: auto; position:fixed; top:0; left:0; bottom:0; right:0; opacity:0.35; filter:alpha(opacity:35); background:#000;}
-    
-    #ss-window { z-index: auto; 
-                 min-width: 300px;
-                 min-height: 300px;
-                 padding: 0;
-                 position: absolute;
-                 background-repeat: no-repeat;
+/*
+    Document   : blogslideshow.css
+    Created on : 23.05.2010, 23:53:21
+    Author     : sheiko
+    Description:
+        Stylesheet for BlogSlideShow tool.
+*/
+
+
+    .hidden { 
+        display: none
+    }
+    #ss-sprite {
+        z-index: auto;
+        position: absolute;
+    }
+    #ss-mask { 
+        z-index: auto;
+        position:fixed;
+        top:0;
+        left:0;
+        bottom:0;
+        right:0;
+        opacity:0.35;
+        filter:alpha(opacity:35);
+        background:#000;
+    }
+    #ss-window {
+         z-index: auto;
+         min-width: 300px;
+         min-height: 300px;
+         padding: 0;
+         position: absolute;
+         background-repeat: no-repeat;
     }
     #ss-window > img {
         -moz-box-shadow: 5px 5px 5px #444;
@@ -35,4 +59,13 @@
         height: 40px;
         float: left;
         cursor: pointer;
+    }
+    #ss-effect-overlay {
+        position: absolute;
+    }
+    #ss-effect-overlay > div {
+        float: left;
+        width: 10%;
+        height: 100%;
+        background-repeat: no-repeat;
     }
