@@ -2,10 +2,29 @@
 * Blog Slide Show
 *
 * @package blogslideshow
-* @author $Author: sheiko $
-* @version $Id: blogslideshow.js, v 2.0 $
+* @author Dmitry Sheiko
+* @version $Revision$
 * @license GNU
 * @copyright (c) Dmitry Sheiko http://dsheiko.com
+* @projectDescription A fancy image viewer, that supports many different types of transition
+*                     effects including CSS3/HTML5-related.
+* @param {effect : string, css: string } - effect can be one of following fade, scroll, ladder,
+*                                          jalousie, rotate, zoom, null
+*                                          css [OPTIONAL] - stylesheet filename
+* @return void
+* 
+* Project page: http://blogslideshow.googlecode.com/
+* Usage examples:
+* window.onload = function(){
+*     new bsShow({
+*         effect: 'fade'
+*     });
+* }
+* 
+* Compatibility:
+*	Tested with Google Chrome 4.1, Firefox 3.6.3, Opera 10.10, Apple Safari 4.0.5, IE 8
+*	Requires jQuery 1.4+
+*
 */
 
 /**
@@ -22,17 +41,35 @@ function bsShow(options)
         return;
     }
     this.merge(options);
-    this.bindUI();
+    this.init();
     bsShow.instace = this;
 }
 
 (function(bsShow) {
 
+var MIN_WIDTH  = 300,
+    MIN_HEIGHT = 300;
+    
 // JS Helpers
 // Shortcut for getElementById
 var $ = function(divName) {
     return document.getElementById(divName);
 }
+// Detects whether it's IE-browser or not
+$.ie = function() {
+    if (navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
+        return true;
+    }
+    return false;
+}
+
+// Helper to pass context of use
+$.proxy = function (method, context) {
+    if (typeof method == 'string') method = context[method];
+    var cb = function () { method.apply(context, arguments); }
+    return cb;
+ };
+
 // Unbind event
 $.unbind = function(node, eType, func) {
     if (document.removeEventListener) {
@@ -50,6 +87,12 @@ $.bind = function(node, eType, func) {
         node.attachEvent('on' + eType, func);
     }
     return node;
+};
+// Combined function to reset event handler
+$.delegate = function(node, eType, cb, context) {
+    var func = $.proxy(cb, context);
+    $.unbind(node, eType, func);
+    $.bind(node, eType, func);
 };
 // Load given CSS file
 $.cssLoad = function(file) {
@@ -198,41 +241,171 @@ var aQueue = {
  */
 var effect = {
         /**
+         * Opacity style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        opacity : function(node, value) {
+            if ($.ie()) {
+                node.style.filter = 'alpha(opacity:' + value + ')';
+            } else {
+                node.style.opacity = value / 100;
+            }
+        },
+        /**
+         * Transformation style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        transform : function(node, value) {
+              node.style.webkitTransform =  value;
+              node.style.MozTransform =  value;
+        },
+        /**
+         * Align node to the screen center. When donor specified the node is aligned
+         * according to donor size
+         * @param HTMLNode node
+         * @param HTMLNode donor OPTIONAL
+         */
+        centerBy : function(node, donor) {
+             if (undefined === donor) {
+                 donor = node;
+             }
+             node.style.left = Math.ceil(document.body.scrollLeft
+                    + $.viewport().width/2 - donor.width/2) + 'px';
+             node.style.top = Math.ceil(document.body.scrollTop
+                    + $.viewport().height/2 - donor.height/2) + 'px';
+        },
+        /**
+         * Makes node size the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        sizeBy : function(node, donor) {
+            node.style.width = donor.width + 'px';
+            node.style.height = donor.height + 'px';
+        },
+        /**
+         * Makes node position the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        positionBy : function(node, donor) {
+            node.style.top = donor.style.top;
+            node.style.left = donor.style.left;
+        },
+        /**
          * Fade effect
          */
         _fadeStarted : function(scope) {
-            scope.boundingBox.style.background = 'url(' + scope.imageNode.src + ') no-repeat';
-            scope.imageNode.src = scope.active;
+            scope.spriteNode.className = '';
+            effect.opacity(scope.spriteNode, 0);
+            scope.spriteNode.src = scope.active;
+            effect.centerBy(scope.spriteNode);
         },
         _fadeIterated : function(counter, number, scope) {
-            if (scope.ie) {
-                scope.imageNode.style.filter = 'alpha(opacity:' + counter * number * 10 + ')';
-            } else {
-                scope.imageNode.style.opacity = '0.' + counter * number;
-            }
+            effect.opacity(scope.spriteNode, counter * number * 10);
         },
         _fadeCompleted : function(scope) {
-            if (scope.ie) {
-                scope.imageNode.style.filter = 'alpha(opacity:100)';
-            } else {
-                scope.imageNode.style.opacity = '1';
+            scope.imageNode.src = scope.active;
+            effect.opacity(scope.spriteNode, 100);
+            effect.centerBy(scope.boundingBox, scope.imageNode);
+            scope.spriteNode.className = 'hidden';
+        },
+        /**
+         * Jalousie effect
+         */
+        _jalousieStarted : function(scope) {            
+            scope.spriteNode.src = scope.active;
+            effect.sizeBy(scope.eOverlayNode, scope.spriteNode);
+            effect.centerBy(scope.eOverlayNode, scope.spriteNode);
+            scope.eOverlayNode.className = '';
+            var maxW = scope.spriteNode.width;
+            for (var i in scope.eOverlayNode.children) {
+                var node = scope.eOverlayNode.children[i];
+                if (undefined !== node.style) {
+                    node.style.backgroundImage = 'url(' + scope.active + ')';
+                    node.style.backgroundPosition = '-' + Math.ceil(i * maxW / 10) + 'px 0px';
+                    effect.transform(node, 'scale(0.1, 1)');
+                }
             }
-            scope.center();
+        },
+        _jalousieIterated : function(counter, number, scope) {
+            for (var i in scope.eOverlayNode.children) {
+                var node = scope.eOverlayNode.children[i];
+                if (undefined !== node.style) {
+                    effect.transform(node, 'scale(' + (counter / number) + ', 1)');
+                }
+            }
+            effect.opacity(scope.imageNode, (number - counter) * number * 10);
+        },
+        _jalousieCompleted : function(scope) {            
+            scope.imageNode.src = scope.active;
+            effect.opacity(scope.imageNode, 100);
+            effect.positionBy(scope.boundingBox, scope.eOverlayNode);
+            scope.eOverlayNode.className = 'hidden';
+        },
+        /**
+         * Ladder effect
+         */
+        _ladderStarted : function(scope) {            
+            scope.boundingBox.style.background
+                = 'url(' + scope.imageNode.src + ') center center no-repeat';
+            scope.spriteNode.src = scope.active;
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.src = "";
+            effect.sizeBy(scope.eOverlayNode, scope.spriteNode);
+            effect.centerBy(scope.eOverlayNode, scope.spriteNode);
+            scope.eOverlayNode.className = '';
+        },
+        _ladderIterated : function(counter, number, scope) {
+            var maxH = scope.spriteNode.height;
+            var maxW = scope.spriteNode.width;
+            for (var i in scope.eOverlayNode.children) {
+                var node = scope.eOverlayNode.children[i];
+                if (undefined !== node.style) {
+                    var h = Math.ceil((counter-1) * maxH / number - ( i * maxH / 10));
+                    if (h > maxH) {
+                        h = maxH;
+                    }
+                    if (h < 0) {
+                        h = 0;
+                    }
+                    node.style.backgroundImage = 'url(' + scope.active + ')';
+                    node.style.backgroundPosition = '-' + Math.ceil(i*maxW/10) + 'px ' + h + 'px';
+                }
+            }
+        },
+        _ladderCompleted : function(scope) {
+            scope.imageNode.src = scope.active;
+            effect.positionBy(scope.boundingBox, scope.eOverlayNode);
+            scope.eOverlayNode.className = 'hidden';
+            scope.boundingBox.style.background = "";
+            for (var i in scope.eOverlayNode.children) {
+                var node = scope.eOverlayNode.children[i];
+                if (undefined !== node.style) {
+                    node.style.background = '';
+                }
+            }
         },
        /**
         * Scroll left effect
         */
         _scrollStarted : function(scope) {
-            scope.boundingBox.style.background = 'url(' + scope.imageNode.src + ') no-repeat';
-            effect.originalWidth = scope.imageNode.width;
-            scope.boundingBox.style.width = effect.originalWidth + "px";
-            scope.boundingBox.style.height = scope.imageNode.height + "px";
+            scope.boundingBox.style.background
+                = 'url(' + scope.imageNode.src + ') center center no-repeat';
+            scope.spriteNode.src = scope.active;
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
             scope.imageNode.src = scope.active;
+            scope.imageNode.style.left = scope.spriteNode.width + 'px';
             scope.boundingBox.style.overflow = 'hidden';
             scope.imageNode.style.position = 'relative';
         },
         _scrollIterated : function(counter, number, scope) {
-            scope.imageNode.style.left =  (4 - counter) * (effect.originalWidth/number) + 'px';
+            scope.imageNode.style.left =   Math.ceil((counter - 1)
+                * scope.spriteNode.width / number) + 'px';
         },
         _scrollCompleted : function(scope) {
             scope.imageNode.style.left =  "0px";
@@ -241,104 +414,48 @@ var effect = {
             scope.boundingBox.style.overflow = '';
             scope.imageNode.style.position = '';
             scope.boundingBox.style.background = '';
-            scope.center();
         },
         /**
         * Rotate effect
         */
         _rotateStarted : function(scope) {
-            scope.boundingBox.style.width = scope.imageNode.width + "px";
-            scope.boundingBox.style.height = scope.imageNode.height + "px";
-            scope.spriteNode.className = '';
+            scope.boundingBox.style.background
+                = 'url(' + scope.imageNode.src + ') center center no-repeat';
             scope.spriteNode.src = scope.active;
-            scope.spriteNode.width = scope.imageNode.width;
-            scope.spriteNode.height = scope.imageNode.height;
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.src = scope.active;
+            
         },
         _rotateIterated : function(counter, number, scope) {
-            var transformation = 'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')';
-            scope.spriteNode.style.webkitTransform =  transformation;
-            scope.spriteNode.style.MozTransform =  transformation;
-
+            effect.transform(scope.imageNode,
+                'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')');
         },
         _rotateCompleted : function(scope) {
-            scope.spriteNode.className = 'hidden';
+            effect.transform(scope.imageNode,'rotate(0deg) scale(1)');
+            scope.boundingBox.style.background = '';
             scope.boundingBox.style.width = 'auto';
             scope.boundingBox.style.height = 'auto';
-            scope.imageNode.src = scope.active;
-            $.unbind(scope.imageNode, 'load', scope.center);
-            $.bind(scope.imageNode, 'load', scope.center);
-        },
-        /**
-        * CurtanX effect
-        */
-        _curtanXStarted : function(scope) {
-            effect.originalWidth = scope.imageNode.width;
-            effect.originalHeight = scope.imageNode.height;
-            scope.spriteNode.src = scope.imageNode.src;
-            scope.spriteNode.className = '';
-            scope.imageNode.className = 'hidden';
-        },
-        _curtanXIterated : function(counter, number, scope) {
-            scope.spriteNode.width = Math.ceil(counter * effect.originalWidth / number );
-            scope.spriteNode.height = effect.originalHeight;
-        },
-        _curtanXHalfCompleted : function(scope) {
-            scope.spriteNode.src = scope.active;
-        },
-        _curtanXCompleted : function(scope) {
-            scope.spriteNode.className = 'hidden';
-            scope.imageNode.className = '';
-            scope.imageNode.src = scope.active;
-            $.unbind(scope.imageNode, 'load', scope.center);
-            $.bind(scope.imageNode, 'load', scope.center);
         },
          /**
         * Zoom effect
         */
         _zoomStarted : function(scope) {
-            effect.originalWidth = scope.imageNode.width;
-            effect.originalHeight = scope.imageNode.height;
-            scope.boundingBox.style.width = scope.imageNode.width + "px";
-            scope.boundingBox.style.height = scope.imageNode.height + "px";
-            scope.spriteNode.src = scope.imageNode.src;
-            scope.spriteNode.className = '';
-            scope.imageNode.className = 'hidden';
-            scope.spriteNode.width = effect.originalWidth;
-            scope.spriteNode.height = effect.originalHeight;
+            scope.spriteNode.src = scope.active;
         },
         _zoomHalfCompleted : function(scope) {
-            scope.spriteNode.src = scope.active;
-            scope.spriteNode.width = effect.originalWidth;
-            scope.spriteNode.height = effect.originalHeight;
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.src = scope.active;
         },
         _zoomIterated : function(counter, number, scope) {
-            var transformation = 'scale('+ (counter / number) +')';
-            scope.spriteNode.style.webkitTransform =  transformation;
-            scope.spriteNode.style.MozTransform =  transformation;
+            effect.transform(scope.imageNode, 'scale('+ (counter / number) +')');
         },
         _zoomCompleted : function(scope) {
             scope.boundingBox.style.width = 'auto';
             scope.boundingBox.style.height = 'auto';
-            scope.spriteNode.className = 'hidden';
-            scope.imageNode.className = '';
-            scope.imageNode.src = scope.active;
-            $.unbind(scope.imageNode, 'load', scope.center);
-            $.bind(scope.imageNode, 'load', scope.center);
-        },
-        /**
-         * Move effect
-         **/
-        _moveIterated : function(counter, number, scope) {
-            console.log(counter, effect.srcLeft);
-            scope.boundingBox.style.left = effect.srcLeft
-                + Math.ceil((effect.targetLeft - effect.srcLeft) / number * counter) + "px";
-            scope.boundingBox.style.top  = effect.srcTop
-                + Math.ceil((effect.targetTop - effect.srcTop) / number * counter) + "px";
-        },
-        _moveCompleted : function(scope) {
-            scope.boundingBox.style.left = effect.targetLeft + "px";
-            scope.boundingBox.style.top  = effect.targetTop + "px";
-        }
+            effect.transform(scope.imageNode, 'scale(1)');
+        }        
 };
 
 bsShow.instace = null;
@@ -351,7 +468,6 @@ bsShow.prototype = {
 	images : [],
 	active : null,
         backup : {},
-        ie: false,
 
         // Placeholders
         boundingBox : null, // Overlay
@@ -362,12 +478,11 @@ bsShow.prototype = {
         closeBtnNode : null, // Close overlay button
         imageNode : null, // Image object
         spriteNode: null, // Sprite which is used for visual effects
+        eOverlayNode: null,
 
-	bindUI : function() {
-            if (navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
-                this.ie = true;
-            }
+	init : function() {
             $.cssLoad(this.options.css);
+            $.bind(document, 'keydown', $.proxy(this._onKeypress, this));            
             this._walkThroughA();
 	},
         merge : function(options) {
@@ -377,36 +492,22 @@ bsShow.prototype = {
                 }
             }
         },
-        center : function() {
-            var scope = bsShow.instace;
-            if (scope.imageNode.width < 300) {
-                scope.imageNode.width = 300;
+        /**
+         * Aligns component to center of the screen
+         * @return void
+         */
+        center : function() {            
+            if (this.imageNode.width < MIN_WIDTH) {
+                this.imageNode.width = MIN_WIDTH;
             }
-            if (scope.imageNode.height < 300) {
-                scope.imageNode.height = 300;
+            if (this.imageNode.height < MIN_HEIGHT) {
+                this.imageNode.height = MIN_HEIGHT;
             }
-
-            effect.targetLeft = Math.ceil(document.body.scrollLeft
-                    + $.viewport().width/2 - scope.imageNode.width/2);
-            effect.targetTop = Math.ceil(document.body.scrollTop
-                    + $.viewport().height/2 - scope.imageNode.height/2);
-
-            if (scope.options.effect && scope.backup.length) {
-                effect.srcLeft = scope.backup.left;
-                effect.srcTop = scope.backup.top;
-                aQueue.add({
-                    iteratedCallback: effect._moveIterated,
-                    completedCallback: effect._moveCompleted,
-                    iterations: 15,
-                    delay: 200,
-                    scope: this}).run();
-            } else {
-                scope.boundingBox.style.left = effect.targetLeft + "px";
-                scope.boundingBox.style.top  = effect.targetTop + "px";
-            }
+            effect.centerBy(this.boundingBox, this.imageNode);
         },
         /**
-         * Retrieve previous and next links
+         * Retrieves previous and next links
+         * @return void
          */
         getNavigation : function() {
           // Get navigation position
@@ -424,7 +525,9 @@ bsShow.prototype = {
             return {prev:prevLink, next: nextLink};
         },
         /**
-         * Update slide show overlay
+         * Updates slide show component
+         * @param string href
+         * @return void
          */
         showImage : function(href) {
             if (null === href || !href.length) {
@@ -446,13 +549,33 @@ bsShow.prototype = {
                             delay: 100,
                             scope: this}).run();
                         break;
+                    case 'jalousie' :
+                        aQueue.add({
+                            startedCallback: effect._jalousieStarted,
+                            iteratedCallback: effect._jalousieIterated,
+                            completedCallback: effect._jalousieCompleted,
+                            iterations: 5,
+                            delay: 50,
+                            scope: this}).run();
+                        break;
+                    case 'ladder' :
+                        aQueue.add({
+                            startedCallback: effect._ladderStarted,
+                            iteratedCallback: effect._ladderIterated,
+                            completedCallback: effect._ladderCompleted,
+                            iterations: 20,
+                            delay: 50,
+                            reverse: true,
+                            scope: this}).run();
+                        break;
                     case 'scroll' :
                         aQueue.add({
                             startedCallback: effect._scrollStarted,
                             iteratedCallback: effect._scrollIterated,
                             completedCallback: effect._scrollCompleted,
-                            iterations: 3,
+                            iterations: 5,
                             delay: 150,
+                            reverse: true,
                             scope: this}).run();
                         break;
                      case 'rotate' :
@@ -463,22 +586,7 @@ bsShow.prototype = {
                             iterations: 10,
                             delay: 50,
                             scope: this}).run();
-                        break;
-                    case 'curtanX' :
-                        aQueue.add({
-                            startedCallback: effect._curtanXStarted,
-                            iteratedCallback: effect._curtanXIterated,
-                            completedCallback: effect._curtanXHalfCompleted,
-                            iterations: 5,
-                            delay: 150,
-                            scope: this,
-                            reverse : true}).add({
-                            iteratedCallback: effect._curtanXIterated,
-                            completedCallback: effect._curtanXCompleted,
-                            iterations: 5,
-                            delay: 150,
-                            scope: this}).run();
-                        break;
+                        break;                    
                     case 'zoom' :
                         aQueue.add({
                             startedCallback: effect._zoomStarted,
@@ -499,53 +607,83 @@ bsShow.prototype = {
                 this.imageNode.src = href;
             }
 
-            $.unbind(this.prevBtnNode, 'click', this._onClickPrev);
-            $.bind(this.prevBtnNode, 'click', this._onClickPrev);
-            $.unbind(this.nextBtnNode, 'click', this._onClickNext);
-            $.bind(this.nextBtnNode, 'click', this._onClickNext);
-            $.unbind(this.closeBtnNode, 'click', this._onClickClose);
-            $.bind(this.closeBtnNode, 'click', this._onClickClose);
-            $.unbind(document, 'keydown', this._onKeypress);
-            $.bind(document, 'keydown', this._onKeypress);
+           
+
         },
+        /**
+         * Event handlers
+         * Each handler:
+         * @param event e
+         * @return void
+         */
         _onKeypress : function(e) {
+            // Escape
+            if (27 == e.keyCode) {
+                this._onClickClose(e);
+            }
             // Next
             if (39 == e.keyCode) {
-               bsShow.instace._onClickNext(e);
+                 this._onClickNext(e);
             }
             // Previous
             if (37 == e.keyCode) {
-               bsShow.instace._onClickPrev(e);
+               this._onClickPrev(e);
             }
         },
         _onClickPrev : function(e) {
-            if(bsShow.instace.ie) { var e = window.event; } else { e.preventDefault(); }
+            if($.ie()) { var e = window.event; } else { e.preventDefault(); }
             e.returnValue = false; // IE fix
-            bsShow.instace.timer = null;
-            bsShow.instace.showImage(bsShow.instace.getNavigation().prev);
+            this.timer = null;
+            this.showImage(this.getNavigation().prev);
         },
         _onClickNext : function(e) {
-            if(bsShow.instace.ie) { var e = window.event; } else { e.preventDefault(); }
+            if($.ie()) { var e = window.event; } else { e.preventDefault(); }
             e.returnValue = false; // IE fix
-            bsShow.instace.timer = null;
-            bsShow.instace.showImage(bsShow.instace.getNavigation().next);
+            this.timer = null;
+            this.showImage(this.getNavigation().next);
         },
         _onClickClose : function(e) {
-            if(bsShow.instace.ie) { var e = window.event; } else { e.preventDefault(); }
+            if($.ie()) { var e = window.event; } else { e.preventDefault(); }
             e.returnValue = false; // IE fix
-            bsShow.instace.timer = null;
-            document.body.removeChild(bsShow.instace.maskNode);
-            document.body.removeChild(bsShow.instace.boundingBox);
+            this.timer = null;
+            try {
+                document.body.removeChild(this.maskNode);
+                document.body.removeChild(this.boundingBox);
+                document.body.removeChild(this.spriteNode);
+                document.body.removeChild(this.eOverlayNode);
+            } catch(e) {  }
         },
         /**
-         * Starts the slide show
+         * Subscribe event handlers for the slide show component
+         * @return void
          */
-	start : function(href) {
+        bindUI : function() {
+            $.delegate(this.maskNode, 'click', this._onClickClose, this);
+            $.delegate(this.prevBtnNode, 'click', this._onClickPrev, this);
+            $.delegate(this.nextBtnNode, 'click', this._onClickNext, this);
+            $.delegate(this.closeBtnNode, 'click', this._onClickClose, this);
+
+            this.boundingBox.onmouseover = $.proxy(function(e) {
+                this.toolbarNode.className = '';
+            }, this);
+            this.boundingBox.onmouseout = $.proxy(function(e) {
+                this.toolbarNode.className = 'hidden';
+            }, this);
+            if (!this.options.effect) {
+                $.bind(this.imageNode, 'load', $.proxy(this.center, this));
+            }
+            window.onresize = $.proxy(this.center, this);
+        },
+        /**
+         * Renders HTML for the slide show component
+         * @param string href
+         * @return void
+         */
+	renderUI : function(href) {
             if (null === href || !href.length) {
                 return;
             }
-            var tpl = '<img id="ss-sprite" class="hidden" src="" />' +
-                '<img id="ss-image" src="' + href + '" />' +
+            var tpl = '<img id="ss-image" src="' + href + '" />' +
                 '<div id="ss-toolbar" class="hidden">' +
                 '   <div id="ss-prev" class="ss-btn"><!-- --></div>' +
                 '   <div id="ss-close" class="ss-btn"><!-- --></div>' +
@@ -554,6 +692,8 @@ bsShow.prototype = {
 
             $.insert('div', '', {id:'ss-mask'});
             $.insert('div', tpl, {id:'ss-window'});
+            $.insert('img', '', {id:'ss-sprite', className: 'hidden'});
+            $.insert('div', '', {id:'ss-effect-overlay', className: 'hidden'});
 
             this.maskNode = $('ss-mask');
             this.boundingBox = $('ss-window');
@@ -563,28 +703,19 @@ bsShow.prototype = {
             this.closeBtnNode = $('ss-close');
             this.imageNode = $('ss-image');
             this.spriteNode = $('ss-sprite');
+            this.eOverlayNode = $('ss-effect-overlay');
 
-            $.unbind(this.maskNode, 'click', this._onClickClose);
-            $.bind(this.maskNode, 'click', this._onClickClose);
-
-            this.boundingBox.onmouseover = function(e) {
-                if (null === aQueue.timer) {
-                    bsShow.instace.toolbarNode.className = '';
-                    bsShow.instace.oTimer = null;
-                } else {
-                    bsShow.instace.oTimer = setTimeout(bsShow.instace.boundingBox.onmouseover, 400);
-                }
-            };
-            this.boundingBox.onmouseout = function(e) {
-                bsShow.instace.toolbarNode.className = 'hidden';
-            };
-            if (!this.options.effect) {
-                $.bind(this.imageNode, 'load', this.center);
-            }
-            window.onresize = this.center;
+            this._fillEOverlay();
+            
+            this.bindUI();
             this.center();
             this.showImage(href);
 	},
+        _fillEOverlay : function() {
+            for (var i = 0; i < 10; i++) {
+                this.eOverlayNode.appendChild(document.createElement('div'));
+            }
+        },      
         /**
          * Walks through A elements, looking for those which contains Rel=blogslideshow
          * Collect urls of images to be shown
@@ -597,11 +728,11 @@ bsShow.prototype = {
                  var re = new RegExp("blogslideshow","gi");
                  if (relAttr && re.test(relAttr) && links[j].href) {
                     // Assigns onclick event for found links
-                    links[j].onclick = function(e) {
-                        if(bsShow.instace.ie) { var e = window.event; } else { e.preventDefault(); }
+                    links[j].onclick = $.proxy(function(e) {
+                        if($.ie()) { var e = window.event; } else { e.preventDefault(); }
                         e.returnValue = false; // IE fix
-                        bsShow.instace.start(this.href);
-                    }
+                        this.renderUI(e.currentTarget.href);
+                    }, this);
                     // Storages required info
                     this.images[i] = new Image();
                     this.images[i].src = links[j].href;
