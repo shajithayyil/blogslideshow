@@ -58,12 +58,13 @@ window.onload = function(){
   * css - (string) path to the stylesheet
 
 ===Effects===
-  * fade 
-  * scroll 
-  * rotate 
-  * curtanX 
-  * zoom 
-  * null
+    * fade
+    * scroll
+    * ladder
+    * jalousie
+    * rotate
+    * zoom
+    * null 
 
 ==HTML==
 
