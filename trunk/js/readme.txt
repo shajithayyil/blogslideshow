@@ -2,7 +2,7 @@ Blog Slide Show
 
 ===================
 
-Version 2.0 - May 2010
+Version 2.1 - May 2010
 
 ---------------------------
 Copyright (C) 2008 - 2010 Dmitry Sheiko
@@ -14,7 +14,7 @@ Tested under following browsers:
     Apple Safari 4.0.5
     IE 8
 
-BlogSlideShow is a JQuery plugin that enhances your blog pages with fancy image viewer, which
+BlogSlideShow is a JS component that enhances your blog pages with fancy image viewer, which
 provides nice transition effects including CSS3/HTML5-related ones.
 
 All what you need is to provide links on your images, you want to show. Likely you already have
@@ -34,6 +34,7 @@ Features
     * Free to use under GPL licence
     * Fully customizable using CSS
     * In 3 ports (pure JS, jQuery, YUI3)
+    * Also nice with images of different size
 
 
 GPL 3 license implies that you must make your further solutions based on BlogSlideShow available

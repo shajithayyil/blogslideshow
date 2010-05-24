@@ -2,7 +2,7 @@ Blog Slide Show YUI3 Port
 
 ===================
 
-Version 2.0 - May 2010
+Version 2.1 - May 2010
 
 ---------------------------
 Copyright (C) 2008 - 2010 Dmitry Sheiko
@@ -15,7 +15,7 @@ Tested under following browsers:
     IE 8
 
 
-BlogSlideShow is a JQuery plugin that enhances your blog pages with fancy image viewer, which
+BlogSlideShow is a YUI3 module that enhances your blog pages with fancy image viewer, which
 provides nice transition effects including CSS3/HTML5-related ones.
 
 All what you need is to provide links on your images, you want to show. Likely you already have
@@ -35,6 +35,7 @@ Features
     * Free to use under GPL licence
     * Fully customizable using CSS
     * In 3 ports (pure JS, jQuery, YUI3)
+    * Also nice with images of different size
 
 
 GPL 3 license implies that you must make your further solutions based on BlogSlideShow available
