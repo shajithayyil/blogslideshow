@@ -14,13 +14,26 @@ Tested under following browsers:
     Apple Safari 4.0.5
     IE 8
 
+BlogSlideShow is a JQuery plugin that enhances your blog pages with fancy image viewer, which
+provides nice transition effects including CSS3/HTML5-related ones.
 
-BlogSlideShow is a tiny JS component, which implements a fancy image viewer, that
-supports many different types of transition effects including CSS3/HTML5-related.
-All what you need is to provide links on your images, you want to show, with
-rel attribute containing Url of image file. When you click on such a link, you’ll
-get the image view on the overlay. When hovering the overlay you get toolbar appeared
-by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
+All what you need is to provide links on your images, you want to show. Likely you already have
+images on blog pages linked. Just add rel attribute containing "blogslideshow" to them.
+
+When you click on such a link, you'll get the image viewer on the overlay. When hovering the
+overlay you get toolbar appeared by which you can navigate images. Besides, you can use
+keyboard arrows <-, ->, Esc as well.
+
+Features
+    * Unique transition effects
+    * Easy to setup
+    * Progressive enhancement
+    * Navigation box
+    * Lightweight (~13KB)
+    * Linking images
+    * Free to use under GPL licence
+    * Fully customizable using CSS
+    * In 3 ports (pure JS, jQuery, YUI3)
 
 
 GPL 3 license implies that you must make your further solutions based on BlogSlideShow available
@@ -65,8 +78,9 @@ Effects
 
     * fade
     * scroll
+    * ladder
+    * jalousie
     * rotate
-    * curtanX
     * zoom
     * null 
 
