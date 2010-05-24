@@ -2,7 +2,7 @@ Blog Slide Show jQuery Port
 
 ===================
 
-Version 2.0 - May 2010
+Version 2.1 - May 2010
 
 ---------------------------
 Copyright (C) 2008 - 2010 Dmitry Sheiko
@@ -35,6 +35,7 @@ Features
     * Free to use under GPL licence
     * Fully customizable using CSS
     * In 3 ports (pure JS, jQuery, YUI3)
+    * Also nice with images of different size
 
 
 GPL 3 license implies that you must make your further solutions based on BlogSlideShow available
@@ -82,10 +83,11 @@ Effects
 
     * fade
     * scroll
+    * ladder
+    * jalousie
     * rotate
-    * curtanX
     * zoom
-    * null
+    * null 
 
 HTML
 
