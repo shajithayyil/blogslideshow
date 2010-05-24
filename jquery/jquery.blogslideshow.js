@@ -2,15 +2,44 @@
 * Blog Slide Show
 *
 * @package blogslideshow
-* @author $Author: sheiko $
-* @version $Id: blogslideshow.js, v 1.0 $
+* @author Dmitry Sheiko
+* @version $Revision$
 * @license GNU
-* @copyright (c) Dmitry Sheiko http://www.cmsdevelopment.com
+* @copyright (c) Dmitry Sheiko http://dsheiko.com
+* @projectDescription A fancy image viewer, that supports many different types of transition
+*                     effects including CSS3/HTML5-related.
+* @id $.fn.bsShow
+* @param {effect : string, css: string } - effect can be one of following fade, scroll, ladder,
+*                                          jalousie, rotate, zoom, null
+*                                          css [OPTIONAL] - stylesheet filename
+* @return void
+
+* Project page: http://blogslideshow.googlecode.com/
+* Usage examples:
+* $(document).ready(function(){
+*     $('a[rel=blogslideshow]').bsShow({
+*         effect: 'fade'
+*     });
+* });
+*
+*
+* Compatibility:
+*	Tested with Google Chrome 4.1, Firefox 3.6.3, Opera 10.10, Apple Safari 4.0.5, IE 8
+*	Requires jQuery 1.4+
+*
 */
 
 
 (function( $ ) {
 
+var MIN_WIDTH  = 300,
+    MIN_HEIGHT = 300,
+    EOVERLAY_TPL = '<div id="ss-effect-overlay" class="hidden">' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '</div>',
+    SPRITE_TPL = '<img id="ss-sprite" src="" class="hidden" />',
+    MASK_TPL = '<div id="ss-mask"><!-- --></div>';
 /**
  * Variation of asynchronous queue, which iterates given callback specified number of times
  */
@@ -105,35 +134,158 @@ var aQueue = {
  */
 var effect = {
         /**
+         * Opacity style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        opacity : function(node, value) {
+            node.css('filter', 'alpha(opacity:' + value + ')');
+            node.css('opacity', value / 100);
+        },
+        /**
+         * Transformation style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        transform : function(node, value) {
+              node.css('-moz-transform', value);
+              node.css('-webkit-transform', value);
+        },
+        /**
+         * Align node to the screen center. When donor specified the node is aligned
+         * according to donor size
+         * @param HTMLNode node
+         * @param HTMLNode donor OPTIONAL
+         */
+        centerBy : function(node, donor) {
+             if (undefined === donor) {
+                 donor = node;
+             }
+             node.css('left',
+                Math.ceil(document.body.scrollLeft + $(window).width()/2 - donor.width()/2) + "px"
+             );
+             node.css('top',
+                Math.ceil(document.body.scrollTop + $(window).height()/2 - donor.height()/2) + "px"
+             );
+        },
+        /**
+         * Makes node size the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        sizeBy : function(node, donor) {
+            node.css('width', donor.width() + 'px');
+            node.css('height', donor.height() + 'px');
+        },
+        /**
+         * Makes node position the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        positionBy : function(node, donor) {
+            node.css('top', donor.css('top'));
+            node.css('left', donor.css('left'));
+        },
+        /**
          * Fade effect
          */
         _fadeStarted : function(scope) {
-            scope.boundingBox.css('background', 'url(' + scope.imageNode.attr('src') + ') no-repeat');
-            scope.imageNode.attr('src', scope.active);
+            scope.spriteNode.removeClass('hidden');
+            effect.opacity(scope.spriteNode, 0);
+            scope.spriteNode.attr('src', scope.active);
+            effect.centerBy(scope.spriteNode);
         },
         _fadeIterated : function(counter, number, scope) {
-            scope.imageNode.css('filter', 'alpha(opacity:' + counter * number * 10 + ')');
-            scope.imageNode.css('opacity', '0.' + counter * number);
+            effect.opacity(scope.spriteNode, counter * number * 10);
         },
         _fadeCompleted : function(scope) {
-            scope.imageNode.css('filter', 'alpha(opacity:100)');
-            scope.imageNode.css('opacity', '1');
-            scope.center();
+            scope.imageNode.attr('src', scope.active);
+            effect.opacity(scope.spriteNode, 100);
+            effect.centerBy(scope.boundingBox, scope.imageNode);
+            scope.spriteNode.addClass('hidden');
+        },
+       /**
+         * Jalousie effect
+         */
+        _jalousieStarted : function(scope) {
+            scope.spriteNode.attr('src', scope.active);
+            effect.sizeBy(scope.eOverlayNode, scope.spriteNode);
+            effect.centerBy(scope.eOverlayNode, scope.spriteNode);
+            scope.eOverlayNode.removeClass('hidden');
+            var maxW = scope.spriteNode.width();
+            scope.eOverlayNode.children().each($.proxy(function(i, node){
+                $(node).css('backgroundImage', 'url(' + scope.active + ')');
+                $(node).css('backgroundPosition', '-' + Math.ceil(i * maxW / 10) + 'px 0px');
+                effect.transform($(node), 'scale(0.1, 1)');
+            }, this));
+        },
+        _jalousieIterated : function(counter, number, scope) {
+            scope.eOverlayNode.children().each($.proxy(function(i, node){
+                effect.transform($(node), 'scale(' + (counter / number) + ', 1)');
+            }, this));
+            effect.opacity(scope.imageNode, (number - counter) * number * 10);
+        },
+        _jalousieCompleted : function(scope) {
+            scope.imageNode.attr('src', scope.active);
+            effect.opacity(scope.imageNode, 100);
+            effect.positionBy(scope.boundingBox, scope.eOverlayNode);
+            scope.eOverlayNode.addClass('hidden');
+        },
+        /**
+         * Ladder effect
+         */
+        _ladderStarted : function(scope) {
+            scope.boundingBox.css('background',
+                'url(' + scope.imageNode.src + ') center center no-repeat');
+            scope.spriteNode.attr('src', scope.active);
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.attr('src', "");
+            effect.sizeBy(scope.eOverlayNode, scope.spriteNode);
+            effect.centerBy(scope.eOverlayNode, scope.spriteNode);
+            scope.eOverlayNode.removeClass('hidden');
+        },
+        _ladderIterated : function(counter, number, scope) {
+            var maxH = scope.spriteNode.height();
+            var maxW = scope.spriteNode.width();
+            scope.eOverlayNode.children().each($.proxy(function(i, node){
+                var h = Math.ceil((counter-1) * maxH / number - ( i * maxH / 10));
+                if (h > maxH) {
+                    h = maxH;
+                }
+                if (h < 0) {
+                    h = 0;
+                }
+                $(node).css('backgroundImage', 'url(' + scope.active + ')');
+                $(node).css('backgroundPosition', '-' + Math.ceil(i*maxW/10) + 'px ' + h + 'px');
+            }, this));
+        },
+        _ladderCompleted : function(scope) {
+            scope.imageNode.attr('src', scope.active);
+            effect.positionBy(scope.boundingBox, scope.eOverlayNode);
+            scope.eOverlayNode.addClass('hidden');
+            scope.boundingBox.css('background', "");
+            scope.eOverlayNode.children().each($.proxy(function(i, node){
+               $(node).css('background', '');
+            }, this));
         },
        /**
         * Scroll left effect
         */
         _scrollStarted : function(scope) {
-            scope.boundingBox.css('background','url(' + scope.imageNode.attr('src') + ') no-repeat');
-            effect.originalWidth = scope.imageNode.attr('width');
-            scope.boundingBox.css('width', effect.originalWidth + "px");
-            scope.boundingBox.css('height', scope.imageNode.attr('height') + "px");
+            scope.boundingBox.css('background',
+                'url(' + scope.imageNode.attr('src') + ') center center no-repeat');
+            scope.spriteNode.attr('src', scope.active);
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
             scope.imageNode.attr('src', scope.active);
+            scope.imageNode.css('left', scope.spriteNode.width() + 'px');
             scope.boundingBox.css('overflow', 'hidden');
             scope.imageNode.css('position', 'relative');
         },
         _scrollIterated : function(counter, number, scope) {
-            scope.imageNode.css('left', (4 - counter) * (effect.originalWidth/number) + 'px');
+            scope.imageNode.css('left', Math.ceil((counter - 1)
+                * scope.spriteNode.width() / number) + 'px');
         },
         _scrollCompleted : function(scope) {
             scope.imageNode.css('left', "0px");
@@ -142,89 +294,47 @@ var effect = {
             scope.boundingBox.css('overflow', '');
             scope.imageNode.css('position', '');
             scope.boundingBox.css('background', '');
-            scope.center();
         },
         /**
         * Rotate effect
         */
         _rotateStarted : function(scope) {
-            scope.boundingBox.css('width', scope.imageNode.attr('width') + "px");
-            scope.boundingBox.css('height', scope.imageNode.attr('height') + "px");
-            scope.spriteNode.removeClass('hidden');
+            scope.boundingBox.css('background',
+                'url(' + scope.imageNode.attr('src') + ') center center no-repeat');
             scope.spriteNode.attr('src', scope.active);
-            scope.spriteNode.attr('width', scope.imageNode.attr('width'));
-            scope.spriteNode.attr('height', scope.imageNode.attr('height'));
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.attr('src', scope.active);
+
         },
         _rotateIterated : function(counter, number, scope) {
-            var transformation = 'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')';
-            scope.spriteNode.css('-moz-transform', transformation);
-            scope.spriteNode.css('-webkit-transform', transformation);
+            effect.transform(scope.imageNode,
+                'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')');
         },
         _rotateCompleted : function(scope) {
-            scope.spriteNode.addClass('hidden');
+            effect.transform(scope.imageNode,'rotate(0deg) scale(1)');
             scope.boundingBox.css('width', 'auto');
             scope.boundingBox.css('height', 'auto');
-            scope.imageNode.attr('src', scope.active);
-            scope.imageNode.unbind('load', scope.center).bind('load', scope.center);
-        },
-        /**
-        * CurtanX effect
-        */
-        _curtanXStarted : function(scope) {
-            effect.originalWidth = scope.imageNode.attr('width');
-            effect.originalHeight = scope.imageNode.attr('height');
-            scope.boundingBox.css('width', scope.imageNode.attr('width') + "px");
-            scope.boundingBox.css('height', scope.imageNode.attr('height') + "px");
-            scope.spriteNode.attr('src', scope.imageNode.attr('src'));
-            scope.spriteNode.removeClass('hidden');
-            scope.imageNode.addClass('hidden');
-        },
-        _curtanXIterated : function(counter, number, scope) {
-            scope.spriteNode.attr('width', Math.ceil(counter * effect.originalWidth / number ));
-            scope.spriteNode.attr('height', effect.originalHeight);
-        },
-        _curtanXHalfCompleted : function(scope) {
-            scope.spriteNode.attr('src', scope.active);
-        },
-        _curtanXCompleted : function(scope) {
-            scope.spriteNode.addClass('hidden');
-            scope.imageNode.removeClass('hidden');
-            scope.boundingBox.css('width', 'auto');
-            scope.boundingBox.css('height', 'auto');
-            scope.imageNode.attr('src', scope.active);
-            scope.imageNode.unbind('load', scope.center).bind('load', scope.center);
+            scope.boundingBox.css('background', '');
         },
          /**
         * Zoom effect
         */
         _zoomStarted : function(scope) {
-            effect.originalWidth = scope.imageNode.attr('width');
-            effect.originalHeight = scope.imageNode.attr('height');
-            scope.boundingBox.css('width', scope.imageNode.attr('width') + "px");
-            scope.boundingBox.css('height', scope.imageNode.attr('height') + "px");
-            scope.spriteNode.attr('src', scope.imageNode.attr('src'));
-            scope.spriteNode.removeClass('hidden');
-            scope.imageNode.addClass('hidden');
-            scope.spriteNode.attr('width', effect.originalWidth);
-            scope.spriteNode.attr('height', effect.originalHeight);
+            scope.spriteNode.attr('src', scope.active);
         },
         _zoomHalfCompleted : function(scope) {
-            scope.spriteNode.attr('src', scope.active);
-            scope.spriteNode.attr('width', effect.originalWidth);
-            scope.spriteNode.attr('height', effect.originalHeight);
+            effect.centerBy(scope.boundingBox, scope.spriteNode);
+            effect.sizeBy(scope.boundingBox, scope.spriteNode);
+            scope.imageNode.attr('src', scope.active);
         },
         _zoomIterated : function(counter, number, scope) {
-            var transformation = 'scale('+ (counter / number) +')';
-            scope.spriteNode.css('-moz-transform', transformation);
-            scope.spriteNode.css('-webkit-transform', transformation);
+            effect.transform(scope.imageNode, 'scale('+ (counter / number) +')');
         },
         _zoomCompleted : function(scope) {
-            scope.spriteNode.addClass('hidden');
-            scope.imageNode.removeClass('hidden');
             scope.boundingBox.css('width', 'auto');
             scope.boundingBox.css('height', 'auto');
-            scope.imageNode.attr('src', scope.active);
-            scope.imageNode.unbind('load', scope.center).bind('load', scope.center);
+            effect.transform(scope.imageNode, 'scale(1)');
         }
 };
 /**
@@ -233,21 +343,16 @@ var effect = {
  *  effect : string
  *  css : string
  */
-$.bsShow = function(options) {
-    // Reconfigurable Singleton
-    if (null !== $.bsShow.instace) {
-        $.extend($.bsShow.instace.options, options);
-        return;
-    }
+var bsShow = function(collection, options) {
     $.extend(this.options, options);
-    this.bindUI();
-    $.bsShow.instace = this;
+    this.init(collection);
+    bsShow.instace = this;
 }
 
 
-$.bsShow.instace = null;
+bsShow.instace = null;
 
-$.bsShow.prototype = {
+bsShow.prototype = {
         options : {
             'css' : 'blogslideshow.css',
             'effect' : 'fade'
@@ -263,41 +368,47 @@ $.bsShow.prototype = {
         closeBtnNode : null, // Close overlay button
         imageNode : null, // Image object
         spriteNode: null, // Sprite which is used for visual effects
-
-	bindUI : function() {
+        eOverlayNode: null,
+        /**
+         * Initializates environment
+         */
+	init : function(collection) {
             this.cssLoad(this.options.css);
-            this._walkThroughA();
+            this._walkThroughA(collection);
 	},
+        /**
+         * Tries to apply shim
+         * @return void
+         */
         tryShim : function() {
             if ($.fn.bgiframe) {
                 this.boundingBox.bgiframe();
             }
         },
-        // Load given CSS file
+        /**
+         * Loads given CSS file
+         * @return void
+         */
         cssLoad : function(file) {
             $('body').append('<link rel="stylesheet" href="'+
                 file + '" type="text/css" media="screen" />');
         },
+        /**
+         * Aligns component to center of the screen
+         * @return void
+         */
         center : function() {
-            var scope = $.bsShow.instace;
-            if (scope.imageNode.width() < 300) {
-                scope.imageNode.css('width', '300px');
+            if (this.imageNode.width() < MIN_WIDTH) {
+                this.imageNode.width(MIN_WIDTH);
             }
-            if (scope.imageNode.height() < 300) {
-                scope.imageNode.css('height', '300px');
+            if (this.imageNode.height() < MIN_HEIGHT) {
+                this.imageNode.height(MIN_HEIGHT);
             }
-
-            scope.boundingBox.css('left',
-                Math.ceil(document.body.scrollLeft + $(window).width()/2
-                    - scope.imageNode.width()/2) + "px"
-            );
-            scope.boundingBox.css('top',
-                Math.ceil(document.body.scrollTop + $(window).height()/2
-                    - scope.imageNode.height()/2) + "px"
-            );
+            effect.centerBy(this.boundingBox, this.imageNode);
         },
         /**
-         * Retrieve previous and next links
+         * Retrieves previous and next links
+         * @return void
          */
         getNavigation : function() {
           // Get navigation position
@@ -315,7 +426,9 @@ $.bsShow.prototype = {
             return {prev:prevLink, next: nextLink};
         },
         /**
-         * Update slide show overlay
+         * Updates slide show component
+         * @param string href
+         * @return void
          */
         showImage : function(href, init) {
             if (null === href || !href.length) {
@@ -334,13 +447,33 @@ $.bsShow.prototype = {
                             delay: 100,
                             scope: this}).run();
                         break;
+                    case 'jalousie' :
+                        aQueue.add({
+                            startedCallback: effect._jalousieStarted,
+                            iteratedCallback: effect._jalousieIterated,
+                            completedCallback: effect._jalousieCompleted,
+                            iterations: 5,
+                            delay: 50,
+                            scope: this}).run();
+                        break;
+                    case 'ladder' :
+                        aQueue.add({
+                            startedCallback: effect._ladderStarted,
+                            iteratedCallback: effect._ladderIterated,
+                            completedCallback: effect._ladderCompleted,
+                            iterations: 20,
+                            delay: 50,
+                            reverse: true,
+                            scope: this}).run();
+                        break;
                     case 'scroll' :
                         aQueue.add({
                             startedCallback: effect._scrollStarted,
                             iteratedCallback: effect._scrollIterated,
                             completedCallback: effect._scrollCompleted,
-                            iterations: 3,
+                            iterations: 5,
                             delay: 150,
+                            reverse: true,
                             scope: this}).run();
                         break;
                      case 'rotate' :
@@ -350,21 +483,6 @@ $.bsShow.prototype = {
                             completedCallback: effect._rotateCompleted,
                             iterations: 10,
                             delay: 50,
-                            scope: this}).run();
-                        break;
-                    case 'curtanX' :
-                        aQueue.add({
-                            startedCallback: effect._curtanXStarted,
-                            iteratedCallback: effect._curtanXIterated,
-                            completedCallback: effect._curtanXHalfCompleted,
-                            iterations: 5,
-                            delay: 150,
-                            scope: this,
-                            reverse : true}).add({
-                            iteratedCallback: effect._curtanXIterated,
-                            completedCallback: effect._curtanXCompleted,
-                            iterations: 5,
-                            delay: 150,
                             scope: this}).run();
                         break;
                     case 'zoom' :
@@ -387,19 +505,27 @@ $.bsShow.prototype = {
                 this.imageNode.attr('src', href);
             }
 
-            this.prevBtnNode.die('click', this._onClickPrev).live('click', this, this._onClickPrev);
-            this.nextBtnNode.die('click', this._onClickNext).live('click', this, this._onClickNext);
-            this.closeBtnNode.die('click', this._onClickClose).live('click', this, this._onClickClose);
-            $(document).unbind('keydown').bind('keydown', this._onKeypress);
+
         },
+        /**
+         * Event handlers
+         * Each handler:
+         * @param event e
+         * @return void
+         */
         _onKeypress : function(e) {
+            e.data = this;
+            // Escape
+            if (27 == e.keyCode) {
+                this._onClickClose(e);
+            }
             // Next
             if (39 == e.keyCode) {
-                bsShow.instace._onClickNext(e);
+                this._onClickNext(e);
             }
             // Previous
             if (37 == e.keyCode) {
-                bsShow.instace._onClickPrev(e);
+                this._onClickPrev(e);
             }
         },
         _onClickPrev : function(e) {
@@ -417,35 +543,21 @@ $.bsShow.prototype = {
             e.data.timer = null;
             e.data.maskNode.remove();
             e.data.boundingBox.remove();
+            e.data.spriteNode.remove();
+            e.data.eOverlayNode.remove();
+        },
+        _onMouseOver : function(e) {
+            e.data.toolbarNode.removeClass('hidden');
         },
         /**
-         * Starts the slide show
+         * Subscribe event handlers for the slide show component
+         * @return void
          */
-	start : function(href) {
-            if (null === href || !href.length) {
-                return;
-            }
-            var tpl = '<img id="ss-sprite" class="hidden" src="" />' +
-                '<img id="ss-image" src="' + href + '" />' +
-                '<div id="ss-toolbar" class="hidden">' +
-                '   <div id="ss-prev" class="ss-btn"><!-- --></div>' +
-                '   <div id="ss-close" class="ss-btn"><!-- --></div>' +
-                '   <div id="ss-next" class="ss-btn"><!-- --></div>' +
-                '</div>';
-
-            $('body').append('<div id="ss-mask"></div>');
-            $('body').append('<div id="ss-window">' + tpl + '</div>');
-
-            this.maskNode = $('body #ss-mask');
-            this.boundingBox = $('body #ss-window');
-            this.toolbarNode = $('body #ss-window #ss-toolbar');
-            this.prevBtnNode = $('body #ss-window #ss-prev');
-            this.nextBtnNode = $('body #ss-window #ss-next');
-            this.closeBtnNode = $('body #ss-window #ss-close');
-            this.imageNode = $('body #ss-window #ss-image');
-            this.spriteNode = $('body #ss-window #ss-sprite');
-
-            this.tryShim(); // shimming will be enaibled when bgiframe loaded
+        bindUI : function() {
+            this.prevBtnNode.die('click', this._onClickPrev).live('click', this, this._onClickPrev);
+            this.nextBtnNode.die('click', this._onClickNext).live('click', this, this._onClickNext);
+            this.closeBtnNode.die('click', this._onClickClose).live('click', this, this._onClickClose);
+            $(document).unbind('keydown').bind('keydown', $.proxy(this._onKeypress, this));
 
             this.maskNode.die('click').live('click', this, this._onClickClose);
 
@@ -455,41 +567,63 @@ $.bsShow.prototype = {
             });
 
             if (!this.options.effect) {
-                this.imageNode.bind('load', function() {
-                    $.bsShow.instace.center();
-                });
+                this.imageNode.bind('load', $.proxy(this.center, this));
             }
-            $(window).unbind('resize').bind('resize', function(e) {
-                $.bsShow.instace.center();
-            });
+            $(window).unbind('resize').bind('resize', $.proxy(this.center, this));
+        },
+        /**
+         * Renders HTML for the slide show component
+         * @param string href
+         * @return void
+         */
+	renderUI : function(href) {
+            if (null === href || !href.length) {
+                return;
+            }
+            var tpl = '<img id="ss-image" src="' + href + '" />' +
+                '<div id="ss-toolbar" class="hidden">' +
+                '   <div id="ss-prev" class="ss-btn"><!-- --></div>' +
+                '   <div id="ss-close" class="ss-btn"><!-- --></div>' +
+                '   <div id="ss-next" class="ss-btn"><!-- --></div>' +
+                '</div>';
 
+            $('body').append(MASK_TPL);
+            $('body').append('<div id="ss-window">' + tpl + '</div>');
+            $('body').append(SPRITE_TPL);
+            $('body').append(EOVERLAY_TPL);
+
+            this.maskNode = $('body #ss-mask');
+            this.boundingBox = $('body #ss-window');
+            this.toolbarNode = $('body #ss-window #ss-toolbar');
+            this.prevBtnNode = $('body #ss-window #ss-prev');
+            this.nextBtnNode = $('body #ss-window #ss-next');
+            this.closeBtnNode = $('body #ss-window #ss-close');
+            this.imageNode = $('body #ss-window #ss-image');
+            this.spriteNode = $('body #ss-sprite');
+            this.eOverlayNode = $('body #ss-effect-overlay');
+            this.tryShim(); // shimming will be enaibled when bgiframe loaded
+            this.bindUI();
             this.center();
             this.showImage(href, true);
 	},
-        _onMouseOver : function(e) {
-            var scope = $.bsShow.instace;
-            if (null === aQueue.timer) {
-                scope.toolbarNode.removeClass('hidden');
-                scope.oTimer = null;
-            } else {
-                scope.oTimer = setTimeout(scope._onMouseOver, 400);
-            }
-        },
         /**
-         * Walks through A elements, looking for those which contains Rel=blogslideshow
          * Collect urls of images to be shown
+         * E.g. Walks through A elements, looking for those which contains Rel=blogslideshow
+         *
+         * @param NodeList collection - range of HTML element to scan against image links occurances
+         * @return void
          */
-	_walkThroughA : function() {
+	_walkThroughA : function(collection) {
             var i = 0;
             // Assigns onclick event for found links
-            $('a[rel=blogslideshow]').live('click', this, function(e){
+            collection.live('click', this, function(e){
                 if ($(this).attr('href')) {
                     e.preventDefault();
-                    e.data.start($(this).attr('href'));
+                    e.data.renderUI($(this).attr('href'));
                 }
             });
             var context = this;
-            $('a[rel=blogslideshow]').each(function() {
+            collection.each(function() {
                  if ($(this).attr('href')) {
                     // Storages required info
                     context.images[i] = new Image();
@@ -500,5 +634,10 @@ $.bsShow.prototype = {
             });
 	}
 };
-
+$.fn.bsShow = function(options) {
+    new bsShow(this, options);
+};
+$.bsShow = function(options) {
+    $.extend(bsShow.instace.options, options);
+};
 })( jQuery );
