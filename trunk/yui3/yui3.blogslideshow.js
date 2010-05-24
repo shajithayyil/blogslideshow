@@ -1,14 +1,52 @@
 /*
 * Blog Slide Show
-* YUI3 Port
 *
 * @package blogslideshow
-* @author $Author: sheiko $  
-* @version $Id: blogslideshow.js, v 2.0 $
+* @author Dmitry Sheiko
+* @version $Revision$
 * @license GNU
 * @copyright (c) Dmitry Sheiko http://dsheiko.com
-*/ 
+* @projectDescription A fancy image viewer, that supports many different types of transition
+*                     effects including CSS3/HTML5-related.
+* @param {effect : string } - effect can be one of following fade, scroll, ladder,
+*                                          jalousie, rotate, zoom, null
+* @return void
+
+* Project page: http://blogslideshow.googlecode.com/
+* Usage examples:
+*   YUI({
+*        modules: {
+*            bsShow: {
+*               fullpath: 'yui3.blogslideshow.js'
+*            },
+*            bsShowCss: {
+*               fullpath: 'blogslideshow.css',
+*               type: 'css'
+*            }
+*        }
+*    }).use('bsShow', 'bsShowCss', 'widget', 'widget-stack', 'event', function(Y){
+*        Y.namespace('app').bsShow.start({effect:'fade'});
+*    });
+*
+*
+* Compatibility:
+*	Tested with Google Chrome 4.1, Firefox 3.6.3, Opera 10.10, Apple Safari 4.0.5, IE 8
+*	Requires jQuery 1.4+
+*
+*/
 YUI.add('bsShow', function(Y){
+
+/**
+ * Constants
+ */
+var MIN_WIDTH  = 300,
+    MIN_HEIGHT = 300,
+    EOVERLAY_TPL = '<div id="ss-effect-overlay" class="hidden">' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '</div>',
+    SPRITE_TPL = '<img id="ss-sprite" src="" class="hidden" />',
+    MASK_TPL = '<div id="ss-mask"><!-- --></div>';
 
 /**
  * Variation of asynchronous queue, which iterates given callback specified number of times
@@ -106,37 +144,160 @@ var aQueue = {
      */
     var effect = {
         /**
+         * Opacity style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        opacity : function(node, value) {
+            node.setStyle('filter', 'alpha(opacity:' + value + ')');
+            node.setStyle('opacity', value / 100);
+        },
+        /**
+         * Transformation style setter
+         * @param HTMLNode node
+         * @param string value
+         */
+        transform : function(node, value) {
+            node.setStyle('webkitTransform', value);
+            node.setStyle('MozTransform', value);
+        },
+        /**
+         * Align node to the screen center. When donor specified the node is aligned
+         * according to donor size
+         * @param HTMLNode node
+         * @param HTMLNode donor OPTIONAL
+         */
+        centerBy : function(node, donor) {
+             if (undefined === donor) {
+                 donor = node;
+             }
+             node.setStyle('left',
+                Math.ceil(document.body.scrollLeft + Y.one('body').get('winWidth') / 2
+                    - donor.get('width') / 2) + "px"
+             );
+             node.setStyle('top',
+                Math.ceil(document.body.scrollTop + Y.one('body').get('winHeight') / 2
+                    - donor.get('height') / 2) + "px"
+             );
+        },
+        /**
+         * Makes node size the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        sizeBy : function(node, donor) {
+            node.setStyle('width', donor.get('width') + 'px');
+            node.setStyle('height', donor.get('height') + 'px');
+        },
+        /**
+         * Makes node position the same as donor
+         * @param HTMLNode node
+         * @param HTMLNode donor
+         */
+        positionBy : function(node, donor) {
+            node.setStyle('top', donor.getStyle('top'));
+            node.setStyle('left', donor.getStyle('left'));
+        },
+        /**
          * Fade effect
          */
         _fadeStarted : function(scope) {
-            scope.get('boundingBox').setStyle('background'
-                , 'url(' + scope.get('imageNode').get('src') + ') no-repeat');
-            scope.get('imageNode').set('src', scope.get('active'));
+            scope.get('spriteNode').removeClass('hidden');
+            effect.opacity(scope.get('spriteNode'), 0);
+            scope.get('spriteNode').set('src', scope.get('active'));
+            effect.centerBy(scope.get('spriteNode'));
         },
         _fadeIterated : function(counter, number, scope) {
-            scope.get('imageNode').setStyle('filter', 'alpha(opacity:' + counter * number * 10 + ')');
-            scope.get('imageNode').setStyle('opacity', '0.' + counter * number);
+            effect.opacity(scope.get('spriteNode'), counter * number * 10);
         },
         _fadeCompleted : function(scope) {
-            scope.get('imageNode').setStyle('filter', 'alpha(opacity:100)');
-            scope.get('imageNode').setStyle('opacity', '1');
-            scope.center();
+            scope.get('imageNode').set('src', scope.get('active'));
+            effect.opacity(scope.get('spriteNode'), 100);
+            effect.centerBy(scope.get('boundingBox'), scope.get('imageNode'));
+            scope.get('spriteNode').addClass('hidden');
+        },
+       /**
+         * Jalousie effect
+         */
+        _jalousieStarted : function(scope) {
+            scope.get('spriteNode').set('src', scope.get('active'));
+            effect.sizeBy(scope.get('eOverlayNode'), scope.get('spriteNode'));
+            effect.centerBy(scope.get('eOverlayNode'), scope.get('spriteNode'));
+            scope.get('eOverlayNode').removeClass('hidden');
+            var maxW = scope.get('spriteNode').get('width');
+            scope.get('eOverlayNode').get('children').each(function(node, i){
+                node.setStyle('backgroundImage', 'url(' + scope.get('active') + ')');
+                node.setStyle('backgroundPosition', '-' + Math.ceil(i * maxW / 10) + 'px 0px');
+                effect.transform(node, 'scale(0.1, 1)');
+            }, this);
+        },
+        _jalousieIterated : function(counter, number, scope) {
+            scope.get('eOverlayNode').get('children').each(function(node, i){
+                effect.transform(node, 'scale(' + (counter / number) + ', 1)');
+            }, this);
+            effect.opacity(scope.get('imageNode'), (number - counter) * number * 10);
+        },
+        _jalousieCompleted : function(scope) {
+            scope.get('imageNode').set('src', scope.get('active'));
+            effect.opacity(scope.get('imageNode'), 100);
+            effect.positionBy(scope.get('boundingBox'), scope.get('eOverlayNode'));
+            scope.get('eOverlayNode').addClass('hidden');
+        },
+        /**
+         * Ladder effect
+         */
+        _ladderStarted : function(scope) {
+            scope.get('boundingBox').setStyle('background',
+                'url(' + scope.get('imageNode').get('src') + ') center center no-repeat');
+            scope.get('spriteNode').set('src', scope.get('active'));
+            effect.centerBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            effect.sizeBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            scope.get('imageNode').set('src', "");
+            effect.sizeBy(scope.get('eOverlayNode'), scope.get('spriteNode'));
+            effect.centerBy(scope.get('eOverlayNode'), scope.get('spriteNode'));
+            scope.get('eOverlayNode').removeClass('hidden');
+        },
+        _ladderIterated : function(counter, number, scope) {
+            var maxH = scope.get('spriteNode').get('height');
+            var maxW = scope.get('spriteNode').get('width');
+            scope.get('eOverlayNode').get('children').each(function(node, i){
+                var h = Math.ceil((counter-1) * maxH / number - ( i * maxH / 10));
+                if (h > maxH) {
+                    h = maxH;
+                }
+                if (h < 0) {
+                    h = 0;
+                }
+                node.setStyle('backgroundImage', 'url(' + scope.get('active') + ')');
+                node.setStyle('backgroundPosition', '-' + Math.ceil(i*maxW/10) + 'px ' + h + 'px');
+            }, this);
+        },
+        _ladderCompleted : function(scope) {
+            scope.get('imageNode').set('src', scope.get('active'));
+            effect.positionBy(scope.get('boundingBox'), scope.get('eOverlayNode'));
+            scope.get('eOverlayNode').addClass('hidden');
+            scope.get('boundingBox').setStyle('background', "");
+            scope.get('eOverlayNode').get('children').each(function(node, i){
+                node.setStyle('background', '');
+            }, this);
         },
        /**
         * Scroll left effect
         */
         _scrollStarted : function(scope) {
-            scope.get('boundingBox').setStyle('background'
-                , 'url(' + scope.get('imageNode').get('src') + ') no-repeat');
-            effect.originalWidth = scope.get('imageNode').get('width');
-            scope.get('boundingBox').setStyle('width', effect.originalWidth + "px");
-            scope.get('boundingBox').setStyle('height', scope.get('imageNode').get('height') + "px");
+            scope.get('boundingBox').setStyle('background',
+                'url(' + scope.get('imageNode').get('src') + ') center center no-repeat');
+            scope.get('spriteNode').set('src', scope.get('active'));
+            effect.centerBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            effect.sizeBy(scope.get('boundingBox'), scope.get('spriteNode'));
             scope.get('imageNode').set('src', scope.get('active'));
+            scope.get('imageNode').setStyle('left', scope.get('spriteNode').get('width') + 'px');
             scope.get('boundingBox').setStyle('overflow', 'hidden');
             scope.get('imageNode').setStyle('position', 'relative');
         },
         _scrollIterated : function(counter, number, scope) {
-            scope.get('imageNode').setStyle('left', (4 - counter) * (effect.originalWidth/number) + 'px');
+            scope.get('imageNode').setStyle('left', Math.ceil((counter - 1)
+                * scope.get('spriteNode').get('width') / number) + 'px');
         },
         _scrollCompleted : function(scope) {
             scope.get('imageNode').setStyle('left', "0px");
@@ -145,89 +306,47 @@ var aQueue = {
             scope.get('boundingBox').setStyle('overflow', '');
             scope.get('imageNode').setStyle('position', '');
             scope.get('boundingBox').setStyle('background', '');
-            scope.center();
         },
         /**
         * Rotate effect
         */
         _rotateStarted : function(scope) {
-            scope.get('boundingBox').setStyle('width', scope.get('imageNode').get('width') + "px");
-            scope.get('boundingBox').setStyle('height', scope.get('imageNode').get('height') + "px");
-            scope.get('spriteNode').removeClass('hidden');
+            scope.get('boundingBox').setStyle('background',
+                'url(' + scope.get('imageNode').get('src') + ') center center no-repeat');
             scope.get('spriteNode').set('src', scope.get('active'));
-            scope.get('spriteNode').set('width', scope.get('imageNode').get('width'));
-            scope.get('spriteNode').set('height', scope.get('imageNode').get('height'));
+            effect.centerBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            effect.sizeBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            scope.get('imageNode').set('src', scope.get('active'));
+
         },
         _rotateIterated : function(counter, number, scope) {
-            var transformation = 'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')';
-            scope.get('spriteNode').setStyle('webkitTransform', transformation);
-            scope.get('spriteNode').setStyle('MozTransform', transformation);
+            effect.transform(scope.get('imageNode'),
+                'rotate(' + (counter * 45) + 'deg) scale('+ (counter / number) +')');
         },
         _rotateCompleted : function(scope) {
-            scope.get('spriteNode').addClass('hidden');
+            effect.transform(scope.get('imageNode'),'rotate(0deg) scale(1)');
             scope.get('boundingBox').setStyle('width', 'auto');
             scope.get('boundingBox').setStyle('height', 'auto');
-            scope.get('imageNode').set('src', scope.get('active'));
-            scope.get('imageNode').detach('load', scope.center).on('load', scope.center, scope);
-        },
-        /**
-        * CurtanX effect
-        */
-        _curtanXStarted : function(scope) {
-            effect.originalWidth = scope.get('imageNode').get('width');
-            effect.originalHeight = scope.get('imageNode').get('height');
-            scope.get('boundingBox').setStyle('width', scope.get('imageNode').get('width') + "px");
-            scope.get('boundingBox').setStyle('height', scope.get('imageNode').get('height') + "px");
-            scope.get('spriteNode').set('src', scope.get('imageNode').get('src'));
-            scope.get('spriteNode').removeClass('hidden');
-            scope.get('imageNode').addClass('hidden');
-        },
-        _curtanXIterated : function(counter, number, scope) {
-            scope.get('spriteNode').set('width', Math.ceil(counter * effect.originalWidth / number ));
-            scope.get('spriteNode').set('height', effect.originalHeight);
-        },
-        _curtanXHalfCompleted : function(scope) {
-            scope.get('spriteNode').set('src', scope.get('active'));
-        },
-        _curtanXCompleted : function(scope) {
-            scope.get('spriteNode').addClass('hidden');
-            scope.get('imageNode').removeClass('hidden');
-            scope.get('boundingBox').setStyle('width', 'auto');
-            scope.get('boundingBox').setStyle('height', 'auto');
-            scope.get('imageNode').set('src', scope.get('active'));
-            scope.get('imageNode').detach('load', scope.center).on('load', scope.center, scope);
+            scope.get('boundingBox').setStyle('background', '');
         },
          /**
         * Zoom effect
         */
         _zoomStarted : function(scope) {
-            effect.originalWidth = scope.get('imageNode').get('width');
-            effect.originalHeight = scope.get('imageNode').get('height');
-            scope.get('boundingBox').setStyle('width', scope.get('imageNode').get('width') + "px");
-            scope.get('boundingBox').setStyle('height', scope.get('imageNode').get('height') + "px");
-            scope.get('spriteNode').set('src', scope.get('imageNode').get('src'));
-            scope.get('spriteNode').removeClass('hidden');
-            scope.get('imageNode').addClass('hidden');
-            scope.get('spriteNode').set('width', effect.originalWidth);
-            scope.get('spriteNode').set('height', effect.originalHeight);
+            scope.get('spriteNode').set('src', scope.get('active'));
         },
         _zoomHalfCompleted : function(scope) {
-            scope.get('spriteNode').set('src', scope.get('active'));
-            scope.get('spriteNode').set('width', effect.originalWidth);
-            scope.get('spriteNode').set('height', effect.originalHeight);
+            effect.centerBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            effect.sizeBy(scope.get('boundingBox'), scope.get('spriteNode'));
+            scope.get('imageNode').set('src', scope.get('active'));
         },
         _zoomIterated : function(counter, number, scope) {
-            var transformation = 'scale('+ (counter / number) +')';
-            scope.get('spriteNode').setStyle('webkitTransform', transformation);
-            scope.get('spriteNode').setStyle('MozTransform', transformation);
+            effect.transform(scope.get('imageNode'), 'scale('+ (counter / number) +')');
         },
         _zoomCompleted : function(scope) {
-            scope.get('spriteNode').addClass('hidden');
-            scope.get('imageNode').removeClass('hidden');
             scope.get('boundingBox').setStyle('width', 'auto');
             scope.get('boundingBox').setStyle('height', 'auto');
-            scope.get('imageNode').set('src', scope.get('active'));
-            scope.get('imageNode').detach('load', scope.center).on('load', scope.center, scope);
+            effect.transform(scope.get('imageNode'), 'scale(1)');
         }
     };
 
@@ -284,7 +403,8 @@ var aQueue = {
             nextBtnNode : null, // To next image button
             closeBtnNode : null, // Close overlay button
             imageNode : null, // Image object
-            spriteNode: null // Sprite which is used for visual effects
+            spriteNode: null, // Sprite which is used for visual effects
+            eOverlayNode: null
     };
 
     /**
@@ -312,11 +432,8 @@ var aQueue = {
             /**
              * @type {YUI.Node}
              */
-            imageNode: "#ss-image",
-            /**
-             * @type {YUI.Node}
-             */
-            spriteNode: "#ss-sprite"
+            imageNode: "#ss-image"
+
     };
 
     Y.namespace('app').bsShow = Y.extend(bsShow, Y.Widget, {
@@ -331,19 +448,18 @@ var aQueue = {
          *
          * @type {string}
          */
-        CONTENT_TEMPLATE: '<img id="ss-sprite" class="hidden" src="" />' +
-                '<img id="ss-image" src="" class="hidden" />' +
+        CONTENT_TEMPLATE: '<img id="ss-image" src="" class="hidden" />' +
                 '<div id="ss-toolbar" class="hidden">' +
                 '   <div id="ss-prev" class="ss-btn"><!-- --></div>' +
                 '   <div id="ss-close" class="ss-btn"><!-- --></div>' +
                 '   <div id="ss-next" class="ss-btn"><!-- --></div>' +
                 '</div>',
-         
+
          /**
          *
          * @return void
          */
-        initializer: function(cfg){            
+        initializer: function(cfg){
         },
 
         /**
@@ -351,8 +467,12 @@ var aQueue = {
          * @return void
          */
         renderUI: function(){
-            Y.one('body').prepend('<div id="ss-mask"><!--  --></div>');
+            Y.one('body').prepend(MASK_TPL);
+            Y.one('body').append(SPRITE_TPL);
+            Y.one('body').append(EOVERLAY_TPL);
             this.set('maskNode', Y.one('#ss-mask'));
+            this.set('spriteNode', Y.one('#ss-sprite'));
+            this.set('eOverlayNode', Y.one('#ss-effect-overlay'));
             this.get('imageNode').set('src', this.get('active'));
             this.get('imageNode').on('load', this.center, this);
         },
@@ -381,10 +501,15 @@ var aQueue = {
             }, this);
             this.get('prevBtnNode').on('click', this._onClickPrev, this);
             this.get('nextBtnNode').on('click', this._onClickNext, this);
-            Y.one(document).on('keydown', this._onKeypress, this);
+            Y.one(document).detach('keydown').on('keydown', this._onKeypress, this);
         },
         // Event handlers
         _onKeypress : function(e) {
+            try {
+            // Escape
+            if (27 == e.keyCode) {
+                this._onClickClose(e);
+            }
             // Next
             if (39 == e.keyCode) {
                 this._onClickNext(e);
@@ -393,10 +518,13 @@ var aQueue = {
             if (37 == e.keyCode) {
                 this._onClickPrev(e);
             }
+            } catch(ex) {}
         },
          _onClickClose : function(e) {
             e.preventDefault();
             this.get('maskNode').remove();
+            this.get('spriteNode').remove();
+            this.get('eOverlayNode').remove();
             this.destroy();
         },
          _onClickPrev : function(e) {
@@ -407,16 +535,6 @@ var aQueue = {
             e.preventDefault();
             this.showImage(this.getNavigation().next);
         },
-        // Callbacks
-        _fadeCallback : function() {
-            this.get('imageNode').setStyle('filter', 'alpha(opacity:'+ (counter * 30) + ')');
-            this.get('imageNode').setStyle('opacity', '0.'+ (counter * 30));
-            counter++;
-        },
-        _fadeCompleteCallback : function() {
-            this.get('imageNode').setStyle('filter', 'alpha(opacity:100)');
-            this.get('imageNode').setStyle('opacity', '1');
-        },
         // Public methods
         showImage : function(href, init) {
             if (null === href || !href.length) {
@@ -425,63 +543,68 @@ var aQueue = {
             this.set('active', href);
             if (this.get('effect') && undefined === init)  {
             switch (this.get('effect')) {
-                case 'fade' :
-                    aQueue.add({
-                        startedCallback: effect._fadeStarted,
-                        iteratedCallback: effect._fadeIterated,
-                        completedCallback: effect._fadeCompleted,
-                        iterations: 3,
-                        delay: 100,
-                        scope: this}).run();
-                    break;
-                case 'scroll' :
-                    aQueue.add({
-                        startedCallback: effect._scrollStarted,
-                        iteratedCallback: effect._scrollIterated,
-                        completedCallback: effect._scrollCompleted,
-                        iterations: 3,
-                        delay: 150,
-                        scope: this}).run();
-                    break;
-                 case 'rotate' :
-                    aQueue.add({
-                        startedCallback: effect._rotateStarted,
-                        iteratedCallback: effect._rotateIterated,
-                        completedCallback: effect._rotateCompleted,
-                        iterations: 10,
-                        delay: 50,
-                        scope: this}).run();
-                    break;
-                case 'curtanX' :
-                    aQueue.add({
-                        startedCallback: effect._curtanXStarted,
-                        iteratedCallback: effect._curtanXIterated,
-                        completedCallback: effect._curtanXHalfCompleted,
-                        iterations: 5,
-                        delay: 150,
-                        scope: this,
-                        reverse : true}).add({
-                        iteratedCallback: effect._curtanXIterated,
-                        completedCallback: effect._curtanXCompleted,
-                        iterations: 5,
-                        delay: 150,
-                        scope: this}).run();
-                    break;
-                case 'zoom' :
-                    aQueue.add({
-                        startedCallback: effect._zoomStarted,
-                        iteratedCallback: effect._zoomIterated,
-                        completedCallback: effect._zoomHalfCompleted,
-                        iterations: 5,
-                        delay: 50,
-                        scope: this,
-                        reverse : true}).add({
-                        iteratedCallback: effect._zoomIterated,
-                        completedCallback: effect._zoomCompleted,
-                        iterations: 5,
-                        delay: 50,
-                        scope: this}).run();
-                    break;
+                 case 'fade' :
+                        aQueue.add({
+                            startedCallback: effect._fadeStarted,
+                            iteratedCallback: effect._fadeIterated,
+                            completedCallback: effect._fadeCompleted,
+                            iterations: 3,
+                            delay: 100,
+                            scope: this}).run();
+                        break;
+                    case 'jalousie' :
+                        aQueue.add({
+                            startedCallback: effect._jalousieStarted,
+                            iteratedCallback: effect._jalousieIterated,
+                            completedCallback: effect._jalousieCompleted,
+                            iterations: 5,
+                            delay: 50,
+                            scope: this}).run();
+                        break;
+                    case 'ladder' :
+                        aQueue.add({
+                            startedCallback: effect._ladderStarted,
+                            iteratedCallback: effect._ladderIterated,
+                            completedCallback: effect._ladderCompleted,
+                            iterations: 20,
+                            delay: 50,
+                            reverse: true,
+                            scope: this}).run();
+                        break;
+                    case 'scroll' :
+                        aQueue.add({
+                            startedCallback: effect._scrollStarted,
+                            iteratedCallback: effect._scrollIterated,
+                            completedCallback: effect._scrollCompleted,
+                            iterations: 5,
+                            delay: 150,
+                            reverse: true,
+                            scope: this}).run();
+                        break;
+                     case 'rotate' :
+                        aQueue.add({
+                            startedCallback: effect._rotateStarted,
+                            iteratedCallback: effect._rotateIterated,
+                            completedCallback: effect._rotateCompleted,
+                            iterations: 10,
+                            delay: 50,
+                            scope: this}).run();
+                        break;
+                    case 'zoom' :
+                        aQueue.add({
+                            startedCallback: effect._zoomStarted,
+                            iteratedCallback: effect._zoomIterated,
+                            completedCallback: effect._zoomHalfCompleted,
+                            iterations: 5,
+                            delay: 50,
+                            scope: this,
+                            reverse : true}).add({
+                            iteratedCallback: effect._zoomIterated,
+                            completedCallback: effect._zoomCompleted,
+                            iterations: 5,
+                            delay: 50,
+                            scope: this}).run();
+                        break;
             }
             } else {
                 this.get('imageNode').set('src', href);
@@ -489,7 +612,7 @@ var aQueue = {
 
             this.get('imageNode').detach('load', this.center);
             this.get('imageNode').on('load', this.center, this);
-            
+
         },
         getNavigation : function() {
           // Get navigation position
@@ -507,24 +630,16 @@ var aQueue = {
             return {prev:prevLink, next: nextLink};
         },
         center : function(){
-            var imgNode = this.get('imageNode');
-            var box = this.get('boundingBox');
-            
-            if (imgNode.get('width') < 300) {
-                imgNode.setStyle('width', '300px');
+            if (this.get('imageNode').get('width') < MIN_WIDTH) {
+                this.get('imageNode').set('width', MIN_WIDTH);
             }
-            if (imgNode.get('height') < 300) {
-                imgNode.setStyle('height', '300px');
+            if (this.get('imageNode').get('height') < MIN_HEIGHT) {
+                this.get('imageNode').set('height', MIN_HEIGHT);
             }
-                        
-            box.setStyle("left",  Math.ceil(document.body.scrollLeft 
-                + Y.one('body').get('winWidth') / 2 - imgNode.get('width') / 2) +'px' );
-            box.setStyle("top",  Math.ceil(document.body.scrollTop 
-                + Y.one('body').get('winHeight') / 2 - imgNode.get('height') / 2) +'px' );
-
-            imgNode.removeClass('hidden');
+            effect.centerBy(this.get('boundingBox'), this.get('imageNode'));
+            this.get('imageNode').removeClass('hidden');
        }
-        
+
     });
 
     bsShow.walkThrough = function () {
@@ -549,9 +664,9 @@ var aQueue = {
             bsShow.walkThrough();
          }, "body");
     };
-    
+
    }, '0.0.1', {
-    requires: ['widget', 'widget-stack', 'node', 'event', 'async-queue']
+    requires: ['widget', 'widget-stack', 'node', 'event']
 });
 
 
