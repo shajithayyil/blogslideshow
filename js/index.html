@@ -10,24 +10,45 @@
     <style>
         body { background-color: #D8DCE0; font-family: Tahoma; font-size: 14px; }
         h1 { font-family: Tahoma; color: #fff; font-size: 18px; }
+        h2 { font-family: Tahoma; font-size: 16px; }
         dfn, acronym, abbr { font-style: normal; }
-        div.message-box {
+        div.desktop {
             padding: 0;
-            margin: 40px;
-            width: 70%;
+            margin-left: -484px;
+            width: 968px;
+            left: 50%;
+            position: absolute;
+            z-index: auto;
         }
-        div.message-box > div.header {
+        div.desktop > div.silo {
+            -moz-box-shadow: 5px 5px 5px #999;
+            -webkit-box-shadow: 5px 5px 5px #999;
+        }
+        div.silo > div.header {
             background-color: #3C5F87;
             -moz-border-radius: 5px 5px 0 0;
             -webkit-border-radius: 5px 5px 0 0;
             padding: 10px 20px;
         }
-        div.message-box > div.body {
-            padding: 10px 20px;
+        div.silo > div.body {
             background-color: #fff;
             -moz-border-radius: 0 0 5px 5px;
-            -webkit-border-radius: 0 0 5px 5px;
+            -webkit-border-radius: 0 0 5px 5px;            
         }
+        div.silo > div.body > div.content {
+            padding: 10px;
+            width: 688px;
+        }
+        div.silo > div.body > div.sidebar {
+            padding: 10px;
+            width: 240px;
+            float: right;
+        }
+        div.copyright {
+            padding: 20px 0 0 0;
+            text-align: center;
+        }
+
         textarea { 
            width: 100%;
            height: 170px;
@@ -50,39 +71,77 @@
     </script>
 </head>    
 <body>
-    <div class="message-box">
+    <div class="desktop">
+        <div class="silo">
         <div class="header">
             <h1>BlogSlideShow Live Demo</h1>
         </div>
         <div class="body">
-        <p><dfn>BlogSlideShow</dfn> is a JS component that enhances your blog pages with fancy image viewer, which provides nice transition effects including <acronym title="Cascading Style Sheets ">CSS3</acronym>/<acronym title="HyperText Markup Language">HTML5</acronym>-related ones.</p>
-        <p>All what you need is to provide links on your images, you want to show. Likely you already have images on blog pages linked. Just add rel attribute containing "blogslideshow" to them.</p>
-        <p>When you click on such a link, you'll get the image viewer on the overlay. When hovering the overlay you get toolbar appeared by which you can navigate images. Besides, you can use keyboard arrows <abbr title="Left arrow key"><-</abbr>, <abbr title="Right arrow key">-></abbr>, <abbr title="Ecape key">Esc</abbr> as well.</p>
-
-         <p>
-            Select the visual effect you want to apply:
-            <select id="selector">
-                <option>fade</option>
-                <option>scroll</option>
-                <option>ladder</option>
-                <option value="jalousie">jalousie (CSS3)</option>
-                <option value="rotate">rotate (CSS3)</option>
-                <option value="zoom">zoom (CSS3)</option>
-                <option value="">[without any effect]</option>
-            </select>
-        </p>
-        <p>
-            Now click on one of the following links and enjoy the image viwer.
-        </p>
-        <ul>
-            <li><a href="sample_frankfurt.jpg" rel="blogslideshow">Frankfurt am Main</a></li>
-            <li><a href="sample_fussen.jpg" rel="blogslideshow">Füssen</a></li>
-            <li><a href="sample_wiesbaden.jpg" rel="blogslideshow">Wiesbaden</a></li>
-        </ul>
-        <p>
-            To make the image viewer available on your page you just need this package files and
-            those lines in your HTML:
-        </p>
+            <div class="sidebar">
+                <h2>Download</h2>
+                <p>
+                    The package with souce code is available at
+                    <a title="Download BlogSlideShow for free" href="http://code.google.com/p/blogslideshow/downloads/list">here</a>
+                </p>
+                <h2>Documentation</h2>
+                <p>
+                    Please <a href="http://code.google.com/p/blogslideshow/wiki/BlogSlideShow">find it here</a>. It's not too much, though it can help.
+                </p>
+                <h2>License</h2>
+                <p>
+                    This project is distributed under <a href="http://www.gnu.org/licenses/gpl.html" rel="nofollow">GPL</a>
+                </p>
+                <h2>Bugs</h2>
+                <p>
+                    Project is hosted at Google Code, so
+                    if you see any bugs, you can <a href="http://code.google.com/p/blogslideshow/issues/list">report them to me</a>
+                </p>
+                <h2>Requirements</h2>
+                <p>
+                    The version tested on
+                    <ul>
+                    <li>Firefox</li>
+                    <li>Google Chrome</li>
+                    <li>Opera</li>
+                    <li>Apple Safari</li>
+                    <li>IE 8</li>
+                    </ul>
+                </p>
+            </div>
+            <div class="content">
+                <h2>Introduction</h2>
+                <p><dfn>BlogSlideShow</dfn> is a JS component that enhances your blog pages with fancy image viewer, which provides nice transition effects including <acronym title="Cascading Style Sheets ">CSS3</acronym>/<acronym title="HyperText Markup Language">HTML5</acronym>-related ones.</p>
+                <p>All what you need is to provide links on your images, you want to show. Likely you already have images on blog pages linked. Just add rel attribute containing "blogslideshow" to them.</p>
+                <p>When you click on such a link, you'll get the image viewer on the overlay. When hovering the overlay you get toolbar appeared by which you can navigate images. Besides, you can use keyboard arrows <abbr title="Left arrow key"><-</abbr>, <abbr title="Right arrow key">-></abbr>, <abbr title="Ecape key">Esc</abbr> as well.</p>
+                <h2>Demo</h2>
+                 <p>
+                    Select the visual effect you want to apply:
+                    <select id="selector">
+                        <option>fade</option>
+                        <option>scroll</option>
+                        <option>ladder</option>
+                        <option value="jalousie">jalousie (CSS3)</option>
+                        <option value="rotate">rotate (CSS3)</option>
+                        <option value="zoom">zoom (CSS3)</option>
+                        <option value="">[without any effect]</option>
+                    </select>
+                </p>
+                <p>
+                    Now click on one of the following links and enjoy the image viwer.
+                </p>
+                <ul>
+                    <li><a href="sample_frankfurt.jpg" rel="blogslideshow">Frankfurt am Main</a></li>
+                    <li><a href="sample_fussen.jpg" rel="blogslideshow">Füssen</a></li>
+                    <li><a href="sample_wiesbaden.jpg" rel="blogslideshow">Wiesbaden</a></li>
+                </ul>
+                <p>
+                    The photos are taken from my <a href="http://picasaweb.google.com/web.sbelarus/">personal alboum</a>
+                </p>
+                <h2>How to use it?</h2>
+                <p>
+                    To make the image viewer available on your page you just need this package files and
+                    those lines in your HTML:
+                </p>
         <p>
             <textarea>
 <script src="blogslideshow.js" ></script>
@@ -97,22 +156,15 @@ window.onload = function(){
             </textarea>
         </p>
         <p>
-            The version works properly on Firefox, Google Chrome, Opera, Apple Safari, IE 8.
-        </p>
-
-        <p>
-            Source code of BlogSlideShow is available to download at
-            <a title="Download BlogSlideShow for free" href="http://code.google.com/p/blogslideshow/downloads/list">Google Code</a>.
-            Project page and SVN can <a title="BlogSlideShow SVN on google code" href="http://code.google.com/p/blogslideshow/">be found here</a>
-        </p>
-
-        <p>
-            The photos are taken from my <a href="http://picasaweb.google.com/web.sbelarus/">personal alboum</a>
-        </p>
-        <p>
             My other open source works can be found <a href="http://dsheiko.com/freeware/">here</a>
         </p>
+            </div>
         </div>
-    </div>    
+        </div>
+        <div class="copyright">
+            Produced by <a href="http://dsheiko.com">Dmitry Sheiko</a>
+        </div>
+    </div>
+    
 </body>
 </html>
