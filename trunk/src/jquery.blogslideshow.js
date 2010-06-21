@@ -8,6 +8,7 @@
 * @copyright (c) Dmitry Sheiko http://dsheiko.com
 * @projectDescription A fancy image viewer, that supports many different types of transition
 *                     effects including CSS3/HTML5-related.
+* @id $.fn.bsShow
 * @param {effect : string, css: string } - effect can be one of following fade, scroll, ladder,
 *                                          jalousie, rotate, zoom, null
 *                                          css [OPTIONAL] - stylesheet filename
@@ -16,20 +17,33 @@
 * Dependencies:
 *   tEffect (t-effect.js)
 *   aQueue (a-queue.js)
-* 
+*
 * Project page: http://blogslideshow.googlecode.com/
 * Usage examples:
-* window.onload = function(){
-*     new bsShow({
+* $(document).ready(function(){
+*     $('a[rel=blogslideshow]').bsShow({
 *         effect: 'fade'
 *     });
-* }
-* 
+* });
+*
+*
 * Compatibility:
 *	Tested with Google Chrome 4.1, Firefox 3.6.3, Opera 10.10, Apple Safari 4.0.5, IE 8
 *	Requires jQuery 1.4+
 *
 */
+
+
+(function( $ ) {
+
+var MIN_WIDTH  = 300,
+    MIN_HEIGHT = 300,
+    EOVERLAY_TPL = '<div id="ss-effect-overlay" class="hidden">' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '<div></div><div></div><div></div><div></div><div></div>' +
+                   '</div>',
+    SPRITE_TPL = '<img id="ss-sprite" src="" class="hidden" />',
+    MASK_TPL = '<div id="ss-mask"><!-- --></div>';
 
 /**
  * Blog Slide Show Component
@@ -37,121 +51,11 @@
  *  effect : string
  *  css : string
  */
-function bsShow(options)
-{
-    // Reconfigurable Singleton
-    if (null !== bsShow.instace) {
-        bsShow.instace.merge(options);
-        return;
-    }
-    this.merge(options);
-    this.init();
+var bsShow = function(collection, options) {
+    $.extend(this.options, options);
+    this.init(collection);
     bsShow.instace = this;
 }
-
-(function(bsShow) {
-
-var MIN_WIDTH  = 300,
-    MIN_HEIGHT = 300;
-    
-// JS Helpers
-// Shortcut for getElementById
-var $ = function(divName) {
-    return document.getElementById(divName);
-};
-// Detects whether it's IE-browser or not
-$.ie = function() {
-    if (navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
-        return true;
-    }
-    return false;
-}
-
-// Helper to pass context of use
-$.proxy = function (method, context) {
-    if (typeof method == 'string') method = context[method];
-    var cb = function () {method.apply(context, arguments);}
-    return cb;
- };
-
-// Unbind event
-$.unbind = function(node, eType, func) {
-    if (document.removeEventListener) {
-        node.removeEventListener(eType, func, false);
-    } else if (document.detachEvent) {
-        node.detachEvent('on' + eType, func);
-    }
-    return node;
-};
-// Bind event
-$.bind = function(node, eType, func) {
-    if (document.addEventListener) {
-        node.addEventListener(eType, func, false);
-    } else if (document.attachEvent) {
-        node.attachEvent('on' + eType, func);
-    }
-    return node;
-};
-// Combined function to reset event handler
-$.delegate = function(node, eType, cb, context) {
-    var func = $.proxy(cb, context);
-    $.unbind(node, eType, func);
-    $.bind(node, eType, func);
-};
-// Load given CSS file
-$.cssLoad = function(file) {
-    var node = document.createElement("link")
-    node.href = file;
-    node.rel = "stylesheet";
-    node.type = "text/css";
-    document.body.appendChild(node);
-};
-// Append given HTML in the document
-$.insert = function(tagName, html, options) {
-    var node = document.createElement(tagName);
-    if (html.length) {
-        node.innerHTML = html;
-    }
-    if (undefined !== options) {
-        for (key in options) {
-            node[key] = options[key];
-        }
-
-    }
-    document.body.appendChild(node);
-};
-// Get window size
-$.viewport = function() {
-	var w = 0;
-	var h = 0;
-	//IE
-	if(!window.innerWidth)
-	{
-            //strict mode
-            if(!(document.documentElement.clientWidth == 0)) {
-                w = document.documentElement.clientWidth;
-                h = document.documentElement.clientHeight;
-            }
-            //quirks mode
-            else {
-                if(document.body.clientWidth) {
-                    w = document.body.clientWidth;
-                    h = document.body.clientHeight;
-                } else {
-                    w = window.document.body.offsetWidth;
-                    h = window.document.body.offsetHeight;
-                }
-            }
-	}
-	//w3c
-	else {
-            w = window.innerWidth;
-            h = window.innerHeight;
-	}
-	return {width:w,height:h};
-};
-
-
 
 
 bsShow.instace = null;
@@ -163,8 +67,6 @@ bsShow.prototype = {
         },
 	images : [],
 	active : null,
-        backup : {},
-
         // Placeholders
         boundingBox : null, // Overlay
         toolbarNode : null, // Toolbar area with navigation buttons
@@ -173,15 +75,16 @@ bsShow.prototype = {
         nextBtnNode : null, // To next image button
         closeBtnNode : null, // Close overlay button
         imageNode : null, // Image object
-        overlayImageNode: null, // Overlay image which is used for transitional effects
-        overlayMaskNode: null, // Overlay div with grid which is used for transitional effects
-
-	init : function() {
-            $.cssLoad(this.options.css);
+        overlayImageNode: null, // Sprite which is used for visual effects
+        overlayMaskNode: null,
+        /**
+         * Initializates environment
+         */
+	init : function(collection) {
+            this.cssLoad(this.options.css);
             this.checkDependencies();
             this.delegateFramework();
-            $.bind(document, 'keydown', $.proxy(this._onKeypress, this));            
-            this._walkThroughA();
+            this._walkThroughA(collection);
 	},
         /**
          * Object property getter (for compliance with YUI3)
@@ -215,61 +118,71 @@ bsShow.prototype = {
          */
         delegateFramework : function() {
             tEffect.Util().delegate({
-                isIe: $.ie,
+                isIe: function(){
+                    return $.browser.msie;
+                },
                 setStyle : function(node, property, value) {
-                    node.style[property] = value;
+                    $(node).css(property, value);
                 },
                 getStyle : function(node, property) {
-                    return node.style[property].replace(/px$/, "");
+                    return $(node).css(property).replace(/px$/, "");
                 },
                 transform : function(node, value) {
-                   node.style.webkitTransform = value;
-                   node.style.MozTransform = value;
+                   $(node).css('-moz-transform', value);
+                   $(node).css('-webkit-transform', value);
                 },
                 windowWidth : function() {
-                    return $.viewport().width;
+                    return $(window).width();
                 },
                 windowHeight : function() {
-                    return $.viewport().height;
+                    return $(window).height();
                 },
                 show : function(node) {
-                    node.className = '';
+                    node.removeClass('hidden');
                 },
                 hide : function(node) {
-                    node.className = 'hidden';
+                    node.addClass('hidden');
                 },
                 set : function(node, property, value) {
-                    node[property] = value;
+                    $(node).attr(property, value);
                 },
                 get : function(node, property) {
-                    return node[property];
+                    return $(node).attr(property);
                 },
                 eachChild : function(node, callback, scope) {
-                    for (var i in node.children) {
-                        if ('object' == typeof(node.children[i])) {
-                            callback(i, node.children[i], scope)
-                        }
-                    }
+                    node.children().each($.proxy(function(i, node){
+                        callback(i, node, scope);
+                    }, this));
                 }
              });
         },
-        merge : function(options) {
-            if (undefined !== options) {
-                for (var key in options) {
-                    this.options[key] = options[key];
-                }
+        /**
+         * Tries to apply shim
+         * @return void
+         */
+        tryShim : function() {
+            if ($.fn.bgiframe) {
+                this.boundingBox.bgiframe();
             }
+        },
+        /**
+         * Loads given CSS file
+         * @return void
+         */
+        cssLoad : function(file) {
+            $('body').append('<link rel="stylesheet" href="'+
+                file + '" type="text/css" media="screen" />');
         },
         /**
          * Aligns component to center of the screen
          * @return void
          */
-        center : function() {            
-            if (this.imageNode.width < MIN_WIDTH) {
-                this.imageNode.width = MIN_WIDTH;
+        center : function() {
+            if (this.imageNode.width() < MIN_WIDTH) {
+                this.imageNode.width(MIN_WIDTH);
             }
-            if (this.imageNode.height < MIN_HEIGHT) {
-                this.imageNode.height = MIN_HEIGHT;
+            if (this.imageNode.height() < MIN_HEIGHT) {
+                this.imageNode.height(MIN_HEIGHT);
             }
             tEffect.Util(this.boundingBox).centerBy(this.imageNode);
         },
@@ -297,16 +210,13 @@ bsShow.prototype = {
          * @param string href
          * @return void
          */
-        showImage : function(href) {
+        showImage : function(href, init) {
             if (null === href || !href.length) {
                 return;
             }
-            this.backup  = {
-                left: this.imageNode.style.left.replace(/\,px$/, ""),
-                top: this.imageNode.style.top.replace(/\,px$/, "")
-            };
             this.active = href;
-            if (this.options.effect && this.imageNode.src != href)  {
+
+            if (this.options.effect && undefined === init)  {
                 switch (this.options.effect) {
                     case 'fade' :
                         aQueue.add({
@@ -354,7 +264,7 @@ bsShow.prototype = {
                             iterations: 10,
                             delay: 50,
                             scope: this}).run();
-                        break;                    
+                        break;
                     case 'zoom' :
                         aQueue.add({
                             startedCallback: tEffect._zoomStarted,
@@ -372,10 +282,9 @@ bsShow.prototype = {
                         break;
                 }
             } else {
-                this.imageNode.src = href;
+                this.imageNode.attr('src', href);
             }
 
-           
 
         },
         /**
@@ -385,66 +294,62 @@ bsShow.prototype = {
          * @return void
          */
         _onKeypress : function(e) {
+            e.data = this;
             // Escape
             if (27 == e.keyCode) {
                 this._onClickClose(e);
             }
             // Next
             if (39 == e.keyCode) {
-                 this._onClickNext(e);
+                this._onClickNext(e);
             }
             // Previous
             if (37 == e.keyCode) {
-               this._onClickPrev(e);
+                this._onClickPrev(e);
             }
         },
         _onClickPrev : function(e) {
-            if($.ie()) {var e = window.event;} else {e.preventDefault();}
-            e.returnValue = false; // IE fix
-            this.timer = null;
-            this.showImage(this.getNavigation().prev);
+            e.preventDefault();
+            e.data.timer = null;
+            e.data.showImage(e.data.getNavigation().prev);
         },
         _onClickNext : function(e) {
-            if($.ie()) {var e = window.event;} else {e.preventDefault();}
-            e.returnValue = false; // IE fix
-            this.timer = null;
-            this.showImage(this.getNavigation().next);
+            e.preventDefault();
+            e.data.timer = null;
+            e.data.showImage(e.data.getNavigation().next);
         },
         _onClickClose : function(e) {
-            if($.ie()) {var e = window.event;} else {e.preventDefault();}
-            e.returnValue = false; // IE fix
-            this.timer = null;
-            try {
-                document.body.removeChild(this.freezeScreenNode);
-                document.body.removeChild(this.boundingBox);
-                document.body.removeChild(this.overlayImageNode);
-                document.body.removeChild(this.overlayMaskNode);
-            } catch(e) {  }
+            e.preventDefault();
+            e.data.timer = null;
+            e.data.freezeScreenNode.remove();
+            e.data.boundingBox.remove();
+            e.data.overlayImageNode.remove();
+            e.data.overlayMaskNode.remove();
         },
-        _onMouseOverBoundingBox : function(e) {
-            this.toolbarNode.className = '';
-        },
-        _onMouseOutBoundingBox : function(e) {
-            this.toolbarNode.className = 'hidden';
+        _onMouseOver : function(e) {
+            e.data.toolbarNode.removeClass('hidden');
         },
         /**
          * Subscribe event handlers for the slide show component
          * @return void
          */
         bindUI : function() {
-            $.delegate(this.freezeScreenNode, 'click', this._onClickClose, this);
-            $.delegate(this.prevBtnNode, 'click', this._onClickPrev, this);
-            $.delegate(this.nextBtnNode, 'click', this._onClickNext, this);
-            $.delegate(this.closeBtnNode, 'click', this._onClickClose, this);
-            
-            this.overlayImageNode.onmouseover = $.proxy(this._onMouseOverBoundingBox, this);
-            this.boundingBox.onmouseover = $.proxy(this._onMouseOverBoundingBox, this);
-            this.overlayImageNode.onmouseout = $.proxy(this._onMouseOutBoundingBox, this);
-            this.boundingBox.onmouseout = $.proxy(this._onMouseOutBoundingBox, this);
+            this.prevBtnNode.die('click', this._onClickPrev).live('click', this, this._onClickPrev);
+            this.nextBtnNode.die('click', this._onClickNext).live('click', this, this._onClickNext);
+            this.closeBtnNode.die('click', this._onClickClose).live('click', this, this._onClickClose);
+            $(document).unbind('keydown').bind('keydown', $.proxy(this._onKeypress, this));
+
+            this.freezeScreenNode.die('click').live('click', this, this._onClickClose);
+
+            this.boundingBox.live('mouseover', this, this._onMouseOver);
+            this.boundingBox.live('mouseout', this, function(e) {
+                e.data.toolbarNode.addClass('hidden');
+            });
+
             if (!this.options.effect) {
-                $.bind(this.imageNode, 'load', $.proxy(this.center, this));
+                this.imageNode.bind('load', $.proxy(this.center, this));
             }
-            window.onresize = $.proxy(this.center, this);
+            $(window).unbind('resize').bind('resize', $.proxy(this.center, this));
         },
         /**
          * Renders HTML for the slide show component
@@ -462,57 +367,57 @@ bsShow.prototype = {
                 '   <div id="ss-next" class="ss-btn"><!-- --></div>' +
                 '</div>';
 
-            $.insert('div', '', {id:'ss-mask'});
-            $.insert('div', tpl, {id:'ss-window'});
-            $.insert('img', '', {id:'ss-sprite', className: 'hidden'});
-            $.insert('div', '', {id:'ss-effect-overlay', className: 'hidden'});
+            $('body').append(MASK_TPL);
+            $('body').append('<div id="ss-window">' + tpl + '</div>');
+            $('body').append(SPRITE_TPL);
+            $('body').append(EOVERLAY_TPL);
 
-            this.freezeScreenNode = $('ss-mask'); 
-            this.boundingBox = $('ss-window');
-            this.toolbarNode = $('ss-toolbar');
-            this.prevBtnNode = $('ss-prev');
-            this.nextBtnNode = $('ss-next');
-            this.closeBtnNode = $('ss-close');
-            this.imageNode = $('ss-image'); 
-            this.overlayImageNode = $('ss-sprite'); 
-            this.overlayMaskNode = $('ss-effect-overlay'); 
-
-            this._fillEOverlay();
-            
+            this.freezeScreenNode = $('body #ss-mask');
+            this.boundingBox = $('body #ss-window');
+            this.toolbarNode = $('body #ss-window #ss-toolbar');
+            this.prevBtnNode = $('body #ss-window #ss-prev');
+            this.nextBtnNode = $('body #ss-window #ss-next');
+            this.closeBtnNode = $('body #ss-window #ss-close');
+            this.imageNode = $('body #ss-window #ss-image');
+            this.overlayImageNode = $('body #ss-sprite');
+            this.overlayMaskNode = $('body #ss-effect-overlay');
+            this.tryShim(); // shimming will be enaibled when bgiframe loaded
             this.bindUI();
             this.center();
-            this.showImage(href);
+            this.showImage(href, true);
 	},
-        _fillEOverlay : function() {
-            for (var i = 0; i < 10; i++) {
-                this.overlayMaskNode.appendChild(document.createElement('div'));
-            }
-        },      
         /**
-         * Walks through A elements, looking for those which contains Rel=blogslideshow
          * Collect urls of images to be shown
+         * E.g. Walks through A elements, looking for those which contains Rel=blogslideshow
+         *
+         * @param NodeList collection - range of HTML element to scan against image links occurances
+         * @return void
          */
-	_walkThroughA : function() {
+	_walkThroughA : function(collection) {
             var i = 0;
-            var links = document.getElementsByTagName("A");
-            for(var j in links) {
-                 var relAttr  = links[j].rel + ""; // as a String
-                 var re = new RegExp("blogslideshow","gi");
-                 if (relAttr && re.test(relAttr) && links[j].href) {
-                    // Assigns onclick event for found links
-                    links[j].onclick = $.proxy(function(e) {
-                        if($.ie()) {var e = window.event;} else {e.preventDefault();}
-                        e.returnValue = false; // IE fix
-                        this.renderUI($.ie() ? e.srcElement.href : e.currentTarget.href);
-                    }, this);
+            // Assigns onclick event for found links
+            collection.live('click', this, function(e){
+                if ($(this).attr('href')) {
+                    e.preventDefault();
+                    e.data.renderUI($(this).attr('href'));
+                }
+            });
+            var context = this;
+            collection.each(function() {
+                 if ($(this).attr('href')) {
                     // Storages required info
-                    this.images[i] = new Image();
-                    this.images[i].src = links[j].href;
-                    this.images[i].rel = links[j].href;
+                    context.images[i] = new Image();
+                    context.images[i].src = $(this).attr('href');
+                    context.images[i].rel = $(this).attr('href');
                     i++;
                  }
-            }
+            });
 	}
 };
-
-})(bsShow);
+$.fn.bsShow = function(options) {
+    new bsShow(this, options);
+};
+$.bsShow = function(options) {
+    $.extend(bsShow.instace.options, options);
+};
+})( jQuery );

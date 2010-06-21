@@ -11,11 +11,11 @@
         display: none
     }
     #ss-sprite {
-        z-index: auto;
+        z-index: 10003;
         position: absolute;
     }
     #ss-mask { 
-        z-index: auto;
+        z-index: 10001;
         position:fixed;
         top:0;
         left:0;
@@ -26,7 +26,7 @@
         background:#000;
     }
     #ss-window {
-         z-index: auto;
+         z-index: 10002;
          min-width: 300px;
          min-height: 300px;
          padding: 0;
@@ -61,6 +61,7 @@
         cursor: pointer;
     }
     #ss-effect-overlay {
+        z-index: 10004;
         position: absolute;
     }
     #ss-effect-overlay > div {

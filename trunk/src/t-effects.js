@@ -7,8 +7,6 @@
 * @license GNU
 * @copyright (c) Dmitry Sheiko http://dsheiko.com
 *
-* Usage examples:
-* 
 */
 var tEffect =  {
     _delegate : [],
@@ -142,37 +140,37 @@ var tEffect =  {
      * Fade effect
      */
     tEffect._fadeStarted = function() {
-        $(this.get('spriteNode')).show();
-        $(this.get('spriteNode')).opacity(0);
-        $(this.get('spriteNode')).set('src', this.get('active'));
-        $(this.get('spriteNode')).centerBy(this.get('spriteNode'));
+        $(this.get('overlayImageNode')).show();
+        $(this.get('overlayImageNode')).opacity(0);
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
+        $(this.get('overlayImageNode')).centerBy(this.get('overlayImageNode'));
     };
     tEffect._fadeIterated = function(counter, number) {
-       $(this.get('spriteNode')).opacity(counter * number * 10);
+       $(this.get('overlayImageNode')).opacity(counter * number * 10);
     };
     tEffect._fadeCompleted = function() {
         $(this.get('imageNode')).set('src', this.get('active'));
-        $(this.get('spriteNode')).opacity(100);
+        $(this.get('overlayImageNode')).opacity(100);
         $(this.get('boundingBox')).centerBy(this.get('imageNode'));
-        $(this.get('spriteNode')).hide();
+        $(this.get('overlayImageNode')).hide();
     };
      /**
      * Jalousie effect
      */
     tEffect._jalousieStarted = function() {
-        $(this.get('spriteNode')).set('src', this.get('active'));
-        $(this.get('eOverlayNode')).sizeBy(this.get('spriteNode'));
-        $(this.get('eOverlayNode')).centerBy(this.get('spriteNode'));
-        $(this.get('eOverlayNode')).show();
-        var maxW = $(this.get('spriteNode')).get('width');
-        $(this.get('eOverlayNode')).eachChild(function(i, node, scope){
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
+        $(this.get('overlayMaskNode')).sizeBy(this.get('overlayImageNode'));
+        $(this.get('overlayMaskNode')).centerBy(this.get('overlayImageNode'));
+        $(this.get('overlayMaskNode')).show();
+        var maxW = $(this.get('overlayImageNode')).get('width');
+        $(this.get('overlayMaskNode')).eachChild(function(i, node, scope){
                 $(node).setStyle('backgroundImage', 'url(' + scope.get('active') + ')');
                 $(node).setStyle('backgroundPosition', '-' + Math.ceil(i * maxW / 10) + 'px 0px');
                 $(node).transform('scale(0.1, 1)');
         }, this);
     };
     tEffect._jalousieIterated = function(counter, number) {
-        $(this.get('eOverlayNode')).eachChild(function(i, node, scope){
+        $(this.get('overlayMaskNode')).eachChild(function(i, node, scope){
             $(node).transform('scale(' + (counter / number) + ', 1)');
         }, this);
         $(this.get('imageNode')).opacity((number - counter) * number * 10);
@@ -180,8 +178,8 @@ var tEffect =  {
     tEffect._jalousieCompleted = function() {
         $(this.get('imageNode')).set('src', this.get('active'));
         $(this.get('imageNode')).opacity(100);
-        $(this.get('boundingBox')).positionBy(this.get('eOverlayNode'));
-        $(this.get('eOverlayNode')).hide();
+        $(this.get('boundingBox')).positionBy(this.get('overlayMaskNode'));
+        $(this.get('overlayMaskNode')).hide();
     };
      /**
      * Ladder effect
@@ -189,18 +187,18 @@ var tEffect =  {
     tEffect._ladderStarted = function() {
         $(this.get('boundingBox')).setStyle('background',
             'url(' + $(this.get('imageNode')).get('src') + ') center center no-repeat');
-        $(this.get('spriteNode')).set('src', this.get('active'));
-        $(this.get('boundingBox')).centerBy(this.get('spriteNode'));
-        $(this.get('boundingBox')).sizeBy(this.get('spriteNode'));
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
+        $(this.get('boundingBox')).centerBy(this.get('overlayImageNode'));
+        $(this.get('boundingBox')).sizeBy(this.get('overlayImageNode'));
         $(this.get('imageNode')).set('src', "");
-        $(this.get('eOverlayNode')).sizeBy(this.get('spriteNode'));
-        $(this.get('eOverlayNode')).centerBy(this.get('spriteNode'));
-        $(this.get('eOverlayNode')).show();
+        $(this.get('overlayMaskNode')).sizeBy(this.get('overlayImageNode'));
+        $(this.get('overlayMaskNode')).centerBy(this.get('overlayImageNode'));
+        $(this.get('overlayMaskNode')).show();
     };
     tEffect._ladderIterated = function(counter, number) {
-        var maxH = $(this.get('spriteNode')).get("height");
-        var maxW = $(this.get('spriteNode')).get("width");
-        $(this.get('eOverlayNode')).eachChild(function(i, node, scope){
+        var maxH = $(this.get('overlayImageNode')).get("height");
+        var maxW = $(this.get('overlayImageNode')).get("width");
+        $(this.get('overlayMaskNode')).eachChild(function(i, node, scope){
             var h = Math.ceil((counter-1) * maxH / number - ( i * maxH / 10));
             if (h > maxH) {
                 h = maxH;
@@ -214,10 +212,10 @@ var tEffect =  {
     };
     tEffect._ladderCompleted = function() {
         $(this.get('imageNode')).set('src', this.get('active'));
-        $(this.get('boundingBox')).positionBy(this.get('eOverlayNode'));
-        $(this.get('eOverlayNode')).hide();
+        $(this.get('boundingBox')).positionBy(this.get('overlayMaskNode'));
+        $(this.get('overlayMaskNode')).hide();
         $(this.get('boundingBox')).setStyle('background', "");
-        $(this.get('eOverlayNode')).eachChild(function(i, node, scope){
+        $(this.get('overlayMaskNode')).eachChild(function(i, node, scope){
             $(node).setStyle('background', '');
         }, this);
     };
@@ -227,17 +225,17 @@ var tEffect =  {
     tEffect._scrollStarted = function() {
         $(this.get('boundingBox')).setStyle('background',
             'url(' + $(this.get('imageNode')).get('src') + ') center center no-repeat');
-        $(this.get('spriteNode')).set('src', this.get('active'));
-        $(this.get('boundingBox')).centerBy(this.get('spriteNode'));
-        $(this.get('boundingBox')).sizeBy(this.get('spriteNode'));
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
+        $(this.get('boundingBox')).centerBy(this.get('overlayImageNode'));
+        $(this.get('boundingBox')).sizeBy(this.get('overlayImageNode'));
         $(this.get('imageNode')).set('src', this.get('active'));
-        $(this.get('imageNode')).setStyle('left', $(this.get('spriteNode')).get('width') + 'px');
+        $(this.get('imageNode')).setStyle('left', $(this.get('overlayImageNode')).get('width') + 'px');
         $(this.get('boundingBox')).setStyle('overflow', 'hidden');
         $(this.get('imageNode')).setStyle('position', 'relative');
     };
     tEffect._scrollIterated = function(counter, number) {
         $(this.get('imageNode')).setStyle('left', Math.ceil((counter - 1)
-            * $(this.get('spriteNode')).get('width') / number) + 'px');
+            * $(this.get('overlayImageNode')).get('width') / number) + 'px');
     };
     tEffect._scrollCompleted = function() {
         $(this.get('imageNode')).setStyle('left', "0px");
@@ -253,9 +251,9 @@ var tEffect =  {
     tEffect._rotateStarted = function() {
         $(this.get('boundingBox')).setStyle('background',
             'url(' + $(this.get('imageNode')).get('src') + ') center center no-repeat');
-        $(this.get('spriteNode')).set('src', this.get('active'));
-        $(this.get('boundingBox')).centerBy(this.get('spriteNode'));
-        $(this.get('boundingBox')).sizeBy(this.get('spriteNode'));
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
+        $(this.get('boundingBox')).centerBy(this.get('overlayImageNode'));
+        $(this.get('boundingBox')).sizeBy(this.get('overlayImageNode'));
         $(this.get('imageNode')).set('src', this.get('active'));
 
     };
@@ -273,11 +271,11 @@ var tEffect =  {
     * Zoom effect
     */
     tEffect._zoomStarted = function() {
-        $(this.get('spriteNode')).set('src', this.get('active'));
+        $(this.get('overlayImageNode')).set('src', this.get('active'));
     };
     tEffect._zoomHalfCompleted = function() {
-        $(this.get('boundingBox')).centerBy(this.get('spriteNode'));
-        $(this.get('boundingBox')).sizeBy(this.get('spriteNode'));
+        $(this.get('boundingBox')).centerBy(this.get('overlayImageNode'));
+        $(this.get('boundingBox')).sizeBy(this.get('overlayImageNode'));
         $(this.get('imageNode')).set('src', this.get('active'));
     };
     tEffect._zoomIterated = function(counter, number) {
