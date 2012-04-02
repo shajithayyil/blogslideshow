@@ -264,7 +264,7 @@
             direction: $('input[name=direction]').val()
         });
         $('form input:radio').bind('change', function(){
-           if ($(this).attr('name') in {'FadeInOut':1, 'DiagonalCells':1, 'RandomCells':1 }) {
+           if ($(this).val() in {'FadeInOut':1, 'DiagonalCells':1, 'RandomCells':1 }) {
                $('input[name=direction]').attr('disabled', 'disabled');
            } else {
                $('input[name=direction]').removeAttr('disabled');
