@@ -1,0 +1,278 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>BlogSlideShow 3.0a Live Demo - fancy image viewer jQuery plugin</title>
+    <meta name="description" content="BlogSlideShow - image viewer with fancy transition effects (+CSS3)" />
+    <meta name="keywords" content="fancy, image preview, slideshow, CSS3" />
+    <link href="./assets/blogslideshow.css" rel="stylesheet" media="all" />
+    <link rel="shortcut icon" href="./assets/favicon.ico" />
+    <link rel="icon" href="./assets/favicon.ico" type="image/ico">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+    <script src="./js/jquery.blogslideshow.min.js" type="text/javascript"></script>
+    
+
+    <style type="text/css">
+        body {
+            background-color: #DDDDDD;
+            color: #222222;
+            font-family: MuseoSlab,"Helvetica Neue",Helvetica,Arial,sans-serif;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+            line-height: 150%;
+        }
+
+        a, a:visited {
+            color: black;
+        }
+
+        article, footer, header, aside {
+            display: block;
+        }
+        aside {
+            float: right;
+            width: 200px;
+            margin-top: 13px;
+            margin-top: 13px;
+        }
+        section > header {
+            background-color: #3C5F87;
+            border-radius: 5px;
+            padding: 20px 20px;
+            margin-top: 0px;
+        }
+        header h1 {
+            text-shadow: 2px 2px 2px #333333;
+            font-size: 32px;
+            line-height: 120%;
+            margin: 0;
+            color: white;
+        }
+        header h2 {
+            text-shadow: 2px 2px 2px #333333;
+            font-size: 18px;
+            margin: 3px;
+            color: white;
+        }
+        section > article {
+            width: 530px;
+        }
+        article form {
+            overflow: hidden;
+        }
+        article form > fieldset {
+            width: 235px;
+            float: left;
+            border: 1px solid #BBBBBB;
+            margin: 0 5px 0 0;
+            -moz-border-radius:3px;
+            -webkit-border-radius:3px;
+            border-radius:3px;
+            -khtml-border-radius:3px;
+        }
+        article form  ul {
+            list-style: none;
+            padding: 0;
+        }
+        article form  ul li {
+            padding: 0;
+        }
+
+        h2 {
+            font-size: 16px;
+        }
+
+        body > section {
+            background-color: #FFFFFF;
+            -webkit-box-shadow: 4px 0 10px #CCCCCC, -4px 0 10px #CCCCCC, 0 38px 36px -24px #AAAAAA;
+            -moz-box-shadow: 4px 0 10px #CCCCCC, -4px 0 10px #CCCCCC, 0 38px 36px -24px #AAAAAA;
+            -o-box-shadow: 4px 0 10px #CCCCCC, -4px 0 10px #CCCCCC, 0 38px 36px -24px #AAAAAA;
+            box-shadow: 4px 0 10px #CCCCCC, -4px 0 10px #CCCCCC, 0 38px 36px -24px #AAAAAA;
+            margin: 0 auto;
+            max-width: 750px;
+            padding: 20px 40px 40px 40px;
+        }
+
+        var {
+            font-weight: bold;
+        }
+        textarea.code {
+            border: 0;
+            background-color: #EEE;
+            background-image: none;
+            color: #222222;
+            font: 14px Arial;
+            display: inline;
+            width: 510px;
+            height: auto;
+            padding: 10px;
+        }
+
+
+        a.button {
+            display: block;
+            position: relative;
+            border:1px solid #bbb;
+            -moz-border-radius:3px;
+            -webkit-border-radius:3px;
+            border-radius:3px;
+            -khtml-border-radius:3px;
+            background: -moz-linear-gradient(100% 100% 90deg, #eee, #d5d5d5);
+            background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#eee), to(#d5d5d5));
+            background: -webkit-linear-gradient(#eee, #d5d5d5);
+            background: -o-linear-gradient(#eee, #d5d5d5);
+            color:#232d3d;
+            font-size:12px;
+            font-weight:bold;
+            padding:4px 30px;
+            margin:13px auto;
+            text-shadow:0px 1px 0px #fff;
+            cursor:pointer;
+            box-shadow:0px 1px 2px #ccc;
+            -moz-box-shadow:0px 1px 2px #ccc;
+            -webkit-box-shadow:0px 1px 2px #ccc;
+            text-align: center;
+            font-size: 18px;
+            text-decoration: none;
+        }
+        dfn, acronym, abbr {
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+
+    <section>
+    <header>
+        <hgroup>
+            <h1>BlogSlideShow</h1>
+            <h2>jQuery image viewer plugin</h2>
+        </hgroup>
+    </header>
+        <aside>
+            <a class="button" href="#">Download</a>
+            <p>
+                <var>jquery.blogslideshow.js</var> is created by <a rel="author" href="http://dsheiko.com">Dmitry Sheiko</a>.
+                It's released under the GPLv2 license.
+            </p>
+            <h2>Browser compatibility</h2>
+
+            <p>The plugin library performs visual effects pretty smoothly using CSS3 with latest browsers (Chrome, Firefox 4+, Safari, IE9+).</p>
+
+            <p>On older browsers (like IE6, FF3.0, ...) CSS Transitions aren't supported, however the plugin shims the effects using JS. So the transitions look almost the same.
+
+            <h2>Bugs</h2>
+            <p>
+                Project is hosted at Google Code, so
+                if you see any bugs, you can <a href="http://code.google.com/p/blogslideshow/issues/list">report them to me</a>
+            </p>
+
+        </aside>
+        <article>
+        <h2>Introduction</h2>
+        
+        <p><dfn>BlogSlideShow</dfn> is a jQuery plugin enhancesing your blog pages with <a rel="tag">image viewer</a>, which provides fancy transition effects. </p>
+        <p><dfn>BlogSlideShow</dfn> comprises my library <a href="https://github.com/dsheiko/Transition-Effects-JS-Library" target="_blank">tEffects</a>, which
+            tries to apply CSS3 transitions to achive the effects. If the browser does not support CSS3, it visualizes the effects using JS.
+            So the plugin is running effects as good as the browser can afford.
+        </p>
+        <p>Likely you already have images on blog pages linked. Just add rel attribute containing "blogslideshow" to them.</p>
+        <p>When you click on such a link, you'll get the image viewer on the overlay. That contains toolbar by which you can navigate images. Besides, you can use <a rel="tag">keyboard</a> arrows <abbr title="Left arrow key">&lt;-</abbr>, <abbr title="Right arrow key">-&gt;</abbr>, <abbr title="Ecape key">Esc</abbr> as well.</p>
+        
+        <h2>Demo</h2>
+        <p>Select the visual effect you want to apply:</p>
+        <form>
+            <fieldset class="effect">
+                <legend>Effect</legend>
+                <ul>
+                    
+                    <li><input id="e1" type="radio" checked="checked" name="effect" value="FadeInOut" /><label for="e1">FadeInOut</label></li>
+                    <li><input id="e2" type="radio" name="effect" value="Jalousie" /><label for="e2">Jalousie</label></li>
+                    <li><input id="e3" type="radio" name="effect" value="Ladder" /><label for="e3">Ladder</label></li>
+                    <li><input id="e4" type="radio" name="effect" value="Scroll" /><label for="e4">Scroll</label></li>                    
+                    <li><input id="e5" type="radio" name="effect" value="Deck" /><label for="e5">Deck</label></li>
+                    <li><input id="e6" type="radio" name="effect" value="DiagonalCells" /><label for="e6">DiagonalCells</label></li>
+                    <li><input id="e7" type="radio" name="effect" value="RandomCells" /><label for="e7">RandomCells</label></li>
+                </ul>
+            </fieldset>
+            <fieldset class="direction">
+                <legend>Direction</legend>
+                <ul>
+                    <li><input id="d2" type="radio" disabled="disabled" checked="checked" name="direction" value="horizontal" /><label for="d2">Horizontal</label></li>
+                    <li><input id="d1" type="radio" disabled="disabled"  name="direction" value="vertical" /><label for="d1">Vertical</label></li>                    
+                </ul>
+                </fieldset>
+        </form>
+
+        <p>
+            Now click on one of the following links and enjoy the image viewer.
+        </p>
+        <ul>
+            <li><a href="./slides/sample_fussen.jpg" title="Füssen - the romantic soul of Bavaria" rel="blogslideshow">Füssen</a></li>
+	    <li><a href="./slides/sample_zakopane.jpg" title="Zakopane - the winter capital of Poland" rel="blogslideshow">Zakopane</a></li>
+	    <li><a href="./slides/sample_wurzburg.jpg" title="Würzburg - on the way to fortress Marienberg" rel="blogslideshow">Würzburg</a></li>
+	    <li><a href="./slides/sample_keukenhof.jpg" title="Keukenhof - the Garden of Europe" rel="blogslideshow">Keukenhof</a></li>
+        </ul>
+        <p>
+            The photos are taken from my <a href="http://picasaweb.google.com/web.sbelarus/">personal alboum</a>
+        </p>
+
+
+       <h2>Usage and API</h2>
+
+
+       <p>To make the image viewer available on your page you just need this package files and those lines in your HTML: </p>
+
+            <div>
+                <textarea rows="8" class="code">
+<link href="./assets/blogslideshow.css" rel="stylesheet" media="all" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="./js/jquery.blogslideshow.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('a[rel=blogslideshow]').bsShow();
+    }); 
+</script>
+                </textarea>
+                </div>
+                
+                <p>Well, that works with no effect applied. Let's define the effect we want:</p>
+                
+<div>                
+    <textarea rows="4" class="code">
+ $('a[rel=blogslideshow]').bsShow({
+    effect: 'Jalousie',
+    direction: 'horizontal'
+});
+</script>
+</textarea>
+</div>
+       
+        </article>
+
+    </section>
+
+    <script type="text/javascript">
+    <!--
+    $(document).ready(function(){
+        var bss = $('a[rel=blogslideshow]').bsShow({
+            effect: $('input[name=effect]').val(),
+            direction: $('input[name=direction]').val()
+        });
+        $('form input:radio').bind('change', function(){
+           if ($(this).attr('name') in {'FadeInOut':1, 'DiagonalCells':1, 'RandomCells':1 }) {
+               $('input[name=direction]').attr('disabled', 'disabled');
+           } else {
+               $('input[name=direction]').removeAttr('disabled');
+           }
+           bss.set({
+                effect: $('input[name=effect]:checked').val(),
+                direction: $('input[name=direction]:checked').val()
+           });
+        });
+    }); // -->
+    </script>
+
+</body>
+</html>
