@@ -1,0 +1,192 @@
+.bss-mask {
+    visibility: hidden;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000;
+    opacity: 0.75;
+    filter: alpha(opacity = 75);
+}
+.bss-overlay {
+    visibility: hidden;
+    position: fixed;
+    background-color: #000;  
+    -moz-box-shadow: 0 0 55px 5px #eee;
+    -webkit-box-shadow: 0 0 55px 5px #eee;
+    -o-shadow: 0 0 55px 5px #eee;
+    -ie-shadow: 0 0 55px 5px #eee;
+    box-shadow: 0 0 55px 5px #eee;
+}
+.bss-overlay .bss-boundingBox {
+    overflow: hidden;
+}
+.bss-image-cache {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+.bss-overlay .bss-boundingBox img {
+    visibility: hidden;
+}
+.bss-overlay .bss-anchor {
+    position: relative;
+}
+
+.bss-overlay .bss-toolbar {
+    position: relative;
+    height: 36px;
+    text-align: center;
+}
+
+.bss-overlay .bss-caption {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;    
+    background-color: #000;
+    -webkit-opacity: 0.5;
+      -moz-opacity: 0.5;
+       -o-opacity: 0.5;
+        opacity: 0.5;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 2px #333333;
+    padding: 5px;
+    overflow: hidden;
+}
+
+.bss-overlay .bss-left {
+    left: 0;
+    top: 0;
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    cursor: pointer;
+}
+.bss-overlay .bss-right {
+    right: 0;
+    top: 0;
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.bss-overlay button {
+    display: inline-block;
+    background-color: transparent;
+    background-image: url(./icons.png);
+    background-position: 0px 0px;
+    background-repeat: no-repeat;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    margin: 5px 0;
+    cursor: pointer;
+}
+.bss-overlay button.prev {
+    position: absolute;
+    background-position: 0px -26px;
+    bottom: 0px;
+    left: 10px;
+}
+
+.bss-overlay button.next {
+    position: absolute;
+    background-position: 0px 0px;
+    bottom: 0px;
+    right: 10px;
+}
+
+.bss-overlay button.close {
+    position: absolute;
+    background-position: 0px -52px;
+    bottom: 0px;
+    right: 42px;
+}
+
+.bss-overlay button.item {
+    background-position: 0px -78px;
+}
+
+.bss-overlay button.te-trigger-inactive {
+    -webkit-opacity: 0.3;
+      -moz-opacity: 0.3;
+       -o-opacity: 0.3;
+        opacity: 0.3;
+    cursor: default;
+}
+        
+/*
+    Document   : t-effects
+    Created on : 01-Feb-2012, 11:04:19
+    Author     : Dmitry Sheiko
+    Description:
+        Supports transittional effect library with stylesheets.
+*/
+
+.te-transition {
+ -webkit-transition: all 1s ease-in-out;
+  -moz-transition: all 1s ease-in-out;
+   -o-transition: all 1s ease-in-out;
+    transition: all 1s ease-in-out;
+}
+.te-boundingBox {
+    position: relative;
+    overflow: hidden;
+}
+.te-boundingBox img {
+    border: 0;
+}
+.te-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-repeat: no-repeat;
+}
+.te-horizontal-grid,
+.te-vertical-grid {
+    overflow: hidden;
+    vertical-align: bottom;
+}
+.te-grid {
+    display: none;
+}
+
+.te-vertical-grid .te-grid > div {
+    display: inline-block;
+    float: left;
+    background-repeat: no-repeat;
+}
+.te-horizontal-grid .te-grid > div {
+    display: block;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+.te-opacity-min {
+    -webkit-opacity: 0;
+      -moz-opacity: 0;
+       -o-opacity: 0;
+        opacity: 0;
+}
+.te-opacity-max {
+    -webkit-opacity: 1.0;
+      -moz-opacity: 1.0;
+       -o-opacity: 1.0;
+        opacity: 1.0;
+}
+.te-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+}
