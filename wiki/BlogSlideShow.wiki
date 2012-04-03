@@ -1,127 +1,66 @@
 #summary Introduction into BlogSlideShow
 
-= Requirements =
+BlogSlideShow is a jQuery plugin enhancesing your blog pages with image viewer, which provides fancy transition effects.
 
-Tested under following browsers:
-  *  Google Chrome 4.1
-  *  Firefox 3.6.3
-  *  Opera 10.10
-  *  Apple Safari 4.0.5
-  *  IE 8
+BlogSlideShow comprises my library tEffects (https://github.com/dsheiko/Transition-Effects-JS-Library), which tries to apply CSS3 transitions to achive the effects. If the browser does not support CSS3, it visualizes the effects using JS. So the plugin is running effects as good as the browser can afford.
 
-= Description =
-BlogSlideShow is a tiny JS component, which implements a fancy image viewer, that
-supports many different types of transition effects including CSS3/HTML5-related.
-All what you need is to provide links on your images, you want to show, with
-rel attribute containing Url of image file. When you click on such a link, you’ll
-get the image view on the overlay. When hovering the overlay you get toolbar appeared
-by which you can navigate images. Besides, you can use keyboard arrows <-, -> as well.
+Likely you already have images on blog pages linked. Just add rel attribute containing "blogslideshow" to them.
+
+When you click on such a link, you'll get the image viewer on the overlay. That contains toolbar by which you can navigate images. Besides, you can use keyboard arrows <-, ->, Esc as well.
 
 = Demo =
   * [http://demo.dsheiko.com/blogslideshow/]
 
-= Ports =
-  * [http://dsheiko.com/download/opensource/yui3.blogslideshow.zip YUI3 port]
-  * [http://dsheiko.com/download/opensource/jquery.blogslideshow.zip jQuery Plugin]
-
-= Files =
-
-  * index.html - sample HTML page
-  * `*`.jpg - sample images
-  * ss_toolbar.png - toolbar
-  * blogslideshow.js - JS library
-  * blogslideshow.css - stylesheet
 
 = How To Install =
 
 == JS ==
-Just add the HTML page or yours following code:
+To make the image viewer available on your page you just need this package files and those lines in your HTML: 
+
 {{{
-<script src="blogslideshow.js" ></script>
-<script type="text/javascript">
-<!--
-window.onload = function(){
-    new bsShow({
-        effect: 'fade'
-    });
-} // -->
+ <link href="./assets/blogslideshow.css" rel="stylesheet" media="all" />
+ <script  src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"  type="text/javascript"></script>
+ <script src="./js/jquery.blogslideshow.min.js" type="text/javascript">  </script>
+ <script type="text/javascript">
+    $(document).ready(function(){
+        $('a[rel=blogslideshow]').bsShow();
+    }); 
+ </script>
+}}}
+
+Well, that works with no effect applied. Let's define the effect we want:
+
+{{{            
+ $('a[rel=blogslideshow]').bsShow({
+    effect: 'Jalousie',
+    direction: 'horizontal'
+});
 </script>
 }}}
 
 
-===Arguments===
-  # options - (object) The options below. 
 
 ===Options===
 
   * effect - (string) which transition effect to apply. 
-  * css - (string) path to the stylesheet
+  * direction - (string) transition direction
 
 ===Effects===
-    * fade
-    * scroll
-    * ladder
-    * jalousie
-    * rotate
-    * zoom
-    * null 
+    * FadeInOut
+    * Jalousie
+    * Ladder
+    * Scroll
+    * Deck
+    * Jaw
+    * DiagonalCells
+    * RandomCells
 
 ==HTML==
 
 And supply with rel="blogslideshow" all the links to images you want to show through
 Blog Slide Show like that:
 {{{
-<a href="sample_wiesbaden.jpg" rel="blogslideshow">link</a>
+<a href="sample_wiesbaden.jpg" rel="blogslideshow" title="optional...">link</a>
 }}}
 
-=How to make my own effect?=
-
-The queue has following public methods:
-  * add(options) - adds an asynchronous iterator into the queue, which will call 'iteratedCallback' of 'iterations' times and then invoke  'completedCallback'
-  * run – starts processing of the queue
-  * stop  - use it, when you need to cancel the queue immediately
-
-Options:
-{{{
-object options {
-     startedCallback : function,  // OPTIONAL. Invoked before iterations started
-     iteratedCallback : function, // invoked when every iteration
-     completedCallback: function, // invoked when the bunch of iterations completed
-     iterations : int, // number of expected iterations 
-     delay: int  // delay in msec
-     reverse: boolean //- OPTIONAL. When reverse is true, decrementing, otherwise incrementing
-     scope: object // context of use
-}
-}}}
-
-So, having this tool we can declare effect implementation in the following fashion:
-{{{
-aQueue.add({
-      startedCallback: effect._fadeStarted,
-      iteratedCallback: effect._fadeIterated,
-      completedCallback: effect._fadeCompleted,
-      iterations: 3,
-      delay: 100,
-      scope: this}).run();
-}}}
-Here in effect._fadeStarted handler we can overlay the current image with next one, which opacity style is about zero (it’s totally transparent).  effect._fadeIterated receives as parameters counter and number (iterations number). So we can use them to change opacity of the appearing image till it becomes pretty solid.  effect._fadeCompleted can be used to clean background picture (we don’t need it anymore) and align image overlay to the viewport center according to the new image size.
-
-Another case, when you want during the effect a sequence of transitions. E.g. the old image is disappearing  ad then the new one starts showing up. So here are two of iterators :
-
-{{{
-aQueue.add({
-         startedCallback: effect._fadeStarted,
-         iteratedCallback: effect._ fadeIterated,
-         completedCallback: effect._ fadeHalfCompleted,
-         iterations: 5,
-         delay: 150,
-         scope: this,
-         reverse : true}).add({
-         iteratedCallback: effect._ fade Iterated,
-         completedCallback: effect._ fadeCompleted,
-         iterations: 5,
-         delay: 150,
-         scope: this}).run();
-}}}
-
-Well, I hope I’ll find it pretty easy to apply a new effects on the slider and looking forward see them. Now when CSS3 provides us with new amazing features, that seems the only limitations we still have is in our imagination. Enjoy! 
+Enjoy! 
