@@ -17,10 +17,12 @@
     -webkit-box-shadow: 0 0 55px 5px #eee;
     -o-shadow: 0 0 55px 5px #eee;
     -ie-shadow: 0 0 55px 5px #eee;
-    box-shadow: 0 0 55px 5px #eee;
+    box-shadow: 0 0 55px 5px #eee;    
 }
 .bss-overlay .bss-boundingBox {
     overflow: hidden;
+    width: 721px; 
+    height: 540px;
 }
 .bss-image-cache {
     position: absolute;
