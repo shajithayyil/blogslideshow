@@ -1,0 +1,22 @@
+{
+  "name": "BlogSlideShow",
+  "title": "BlogSlideShow",
+  "version": "1.0",
+  "author": "Dmitry Sheiko",
+  "description": "BlogSlideShow comprises my library tEffects, which tries to apply CSS3 transitions to achieve the effects. If the browser does not support CSS3, it visualizes the effects using JS. So the plugin is running effects as good as the browser can afford. Likely you already have images on blog pages linked. Just add rel attribute containing blogslideshow to them.",
+  "homepage": "http://code.google.com/p/blogslideshow/",
+  "licenses": [
+   {
+       "type": "MIT",
+       "url": "http://opensource.org/licenses/mit-license.php"
+   }],
+  "repository": {
+    "type": "googlecode",
+    "url": "http://code.google.com/p/blogslideshow/"
+  },
+  "main": "./src/js/jquery.blogslideshow.js",
+  "dependencies": {
+  },
+  "engines": {
+  }
+}
